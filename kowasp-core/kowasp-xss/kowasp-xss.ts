@@ -63,7 +63,7 @@ const report = `
  -------------
  KOwasp-XSS Report
  -------------
- Code: ${vulCode};
+ Code: ${vulCode}
  Vulnerable: ${isVulnerable ? 'Yes' : 'No'}
  -------------
  Summary: The code is vulnerable to XSS attacks
