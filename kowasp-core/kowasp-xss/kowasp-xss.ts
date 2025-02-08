@@ -66,7 +66,7 @@ const report = `
  Code: ${vulCode}
  Vulnerable: ${isVulnerable ? 'Yes' : 'No'}
  -------------
- Summary: The code is vulnerable to XSS attacks
+ Summary: Eval function is used with alert function which is vulnerable to XSS attacks
  -------------
  Recommendations: Use a Content Security Policy (CSP) to prevent XSS attacks
  -------------
