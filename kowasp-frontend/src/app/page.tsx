@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 export const runtime = "edge"; // cloudflare pages
 
 export default function Home() {
