@@ -20,6 +20,9 @@ export default function Home() {
           </a>
         </div>
       </main>
+      <footer className="row-start-3 flex items-center justify-center">
+      Building... Stay tuned!
+      </footer>
     </div>
   );
 }
