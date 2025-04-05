@@ -1,13 +1,19 @@
-// kowasp-xss
+// kowasp-core
 // Can be used for educational purposes only
 
 const vulCode = "eval('alert(1)');";
+const {Parser} = require("acorn");
 
 // Syntactic Analysis
 // Identify tokens
 
 const tokens = vulCode.split(/(\(|\)|\s|;)/).filter(token => token !== '');
-console.log(tokens);
+//console.log(tokens);
+const MyParser = Parser.extend(
+  require("acorn-jsx")(),
+  require("acorn-bigint")
+)
+console.log(MyParser.parse("eval('alert(1)');"))// Some bigint + JSX code
 
 
 // Lexical Analysis
