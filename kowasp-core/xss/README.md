@@ -1,6 +1,8 @@
 ## OWASP TOP 10 - Injection
 
 ### XSS (Cross Site Scripting)
+[OWASP Cross Site Scripting Definition](https://owasp.org/www-community/attacks/xss/)
+
 - a code injection attack that allows an attacker to execute malicious scripts in another user's browser.
 - occurs when a web application includes untrusted data in a new web page without proper validation or escaping.
 - allows attackers to execute scripts in the victim's browser which can hijack user sessions, deface websites, or redirect the user to malicious sites.
@@ -56,3 +58,11 @@ In summary: while ESLint and JSLint are good for simple XSS/CSRF attack detectio
 execution, it is impossible or unfeasible to make them directly detect full-fledged attacks such as Cross Site Scripting (XSS) through traditional methods.
 A better approach would be using a combination of web application firewalls which can block and inspect all types XSS/CSRF attack attempts while also providing an
 easy way for end users or developers to identify if their requests are safe, thus potentially reducing the risk associated with these attacks over time .
+
+### Resources
+
+#### Testing
+- [Reflected Cross Site Scripting](https://owasp.org/www-project-web-security-testing-guide/v41/4-Web_Application_Security_Testing/07-Input_Validation_Testing/01-Testing_for_Reflected_Cross_Site_Scripting.html)
+- [Stored Cross Site Scripting](https://owasp.org/www-project-web-security-testing-guide/v41/4-Web_Application_Security_Testing/07-Input_Validation_Testing/02-Testing_for_Stored_Cross_Site_Scripting.html)
+- [DOM-based Cross Site Scripting](https://owasp.org/www-project-web-security-testing-guide/v41/4-Web_Application_Security_Testing/11-Client_Side_Testing/01-Testing_for_DOM-based_Cross_Site_Scripting.html)
+
