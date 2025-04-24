@@ -2,46 +2,30 @@
 // Can be used for educational purposes only
 
 const vulCode = "eval('alert(1)');";
-const {Parser} = require("acorn");
+const esprima = require('esprima');
 
 // Syntactic Analysis
 // Identify tokens
 
-const tokens = vulCode.split(/(\(|\)|\s|;)/).filter(token => token !== '');
-//console.log(tokens);
-const MyParser = Parser.extend(
-  require("acorn-jsx")(),
-  require("acorn-bigint")
-)
-console.log(MyParser.parse("eval('alert(1)');"))// Some bigint + JSX code
-
+// Determine its a script or a module
+const moduleExample = 'import { sqrt } from "math.js"';
+console.log(esprima.parseScript(vulCode));
+console.log(esprima.parseModule(moduleExample));
 
 // Lexical Analysis
 // Identify the meaning of each token
 
-const lexemes = tokens.map(token => {
-    if (token === 'eval') {
-        return 'eval';
-    } else if (token === ' ') {
-        return 'whitespace';
-    } else if (token === '(' || token === ')') {
-        return 'parenthesis';
-    } else if (token === ';') {
-        return 'semicolon';
-    } else {
-        return 'string';
-    }
-});
-
-console.log(lexemes);
+const tokens = esprima.tokenize(vulCode);
+console.log(tokens);
 
 // Build an Abstract Syntax Tree (AST)
 // Identify the structure of the code
 
-const ast = {
-    type: 'eval',
-    value: 'alert(1)'
-};
+//const ast = {
+    //type: 'eval',
+    //value: 'alert(1)'
+//};
+const ast = esprima.parse(vulCode);
 
 console.log(ast);
 
@@ -50,7 +34,7 @@ console.log(ast);
 // Check if the code is vulnerable
 
 const isVulnerable = ast.type === 'eval' && ast.value.includes('alert');
-console.log(isVulnerable);
+//console.log(isVulnerable);
 
 // Output Dashboard
 // -------------

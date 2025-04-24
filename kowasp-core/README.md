@@ -13,3 +13,8 @@ A command line tool that detects security vulnerabilities in web applications. <
     - [Esprima AST Format](https://docs.esprima.org/en/4.0/syntax-tree-format.html)
 4. Semantic Analysis - Identify the meaning of the AST, check if the code is vulnerable
     - [Semgrep Rules](https://github.com/semgrep/semgrep-rules)
+
+projects to look at
+[eslint](https://github.com/eslint/eslint)
+[eslint-plugin-xss](https://github.com/Rantanen/eslint-plugin-xss/tree/master)
+[eslint-plugin-no-unsanitized](https://github.com/mozilla/eslint-plugin-no-unsanitized)
