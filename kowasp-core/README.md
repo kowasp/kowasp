@@ -1,20 +1,86 @@
-### KOwasp Core
+# Kowasp Core - XSS Scanner
 
-A command line tool that detects security vulnerabilities in web applications. <br />
+A powerful XSS (Cross-Site Scripting) vulnerability scanner that combines regex-based pattern matching with LLM-powered analysis for enhanced accuracy.
 
-#### Procedure
+## Features
 
-1. Syntactic Analysis - Identify tokens
-    - [EsprimaJS](https://docs.esprima.org/en/4.0/syntactic-analysis.html)
-2. Lexical Analysis - Identify the meaning of each token
-    - [EsprimaJS](https://docs.esprima.org/en/4.0/lexical-analysis.html)
-3. Build an Abstract Syntax Tree (AST) - Identify the structure of the code
-    - [ESTree AST Spec](https://github.com/estree/estree/blob/master/es2025.md)
-    - [Esprima AST Format](https://docs.esprima.org/en/4.0/syntax-tree-format.html)
-4. Semantic Analysis - Identify the meaning of the AST, check if the code is vulnerable
-    - [Semgrep Rules](https://github.com/semgrep/semgrep-rules)
+- Regex-based XSS pattern matching
+- LLM-powered analysis for reducing false positives
+- Support for scanning files and URLs
+- Beautiful CLI output with detailed findings
+- Configurable severity levels
+- Extensible pattern database
 
-projects to look at
-[eslint](https://github.com/eslint/eslint)
-[eslint-plugin-xss](https://github.com/Rantanen/eslint-plugin-xss/tree/master)
-[eslint-plugin-no-unsanitized](https://github.com/mozilla/eslint-plugin-no-unsanitized)
+## Installation
+
+```bash
+npm install
+npm run build
+```
+
+## Usage
+
+### Scan a File
+
+```bash
+# Basic scan without LLM analysis
+npm start scan -f path/to/file.html
+
+# Scan with LLM analysis
+npm start scan -f path/to/file.html -k your-openai-api-key
+```
+
+### Scan a URL
+
+```bash
+# Basic scan without LLM analysis
+npm start scan-url -u https://example.com
+
+# Scan with LLM analysis
+npm start scan-url -u https://example.com -k your-openai-api-key
+```
+
+## Output
+
+The scanner provides detailed output for each finding, including:
+
+- Pattern name and description
+- Severity level
+- Matched text
+- Position in the content
+- LLM analysis (if enabled)
+  - True/False positive determination
+  - Confidence level
+  - Explanation
+  - Recommendation
+
+## Adding Custom Patterns
+
+You can add custom XSS patterns by editing the `patterns/xss_patterns.json` file. Each pattern should follow this structure:
+
+```json
+{
+    "name": "Pattern Name",
+    "pattern": "regex pattern",
+    "description": "Pattern description",
+    "severity": "High|Medium|Low",
+    "example": "Example of the pattern"
+}
+```
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Run tests
+npm test
+```
+
+## License
+
+MIT
