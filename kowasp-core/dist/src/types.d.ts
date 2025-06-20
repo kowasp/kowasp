@@ -5,7 +5,6 @@ export interface XSSPattern {
     'pattern-either'?: XSSPattern[];
     'pattern-not'?: XSSPattern[];
 }
-
 export interface XSSRule {
     id: string;
     patterns: XSSPattern[];
@@ -21,7 +20,6 @@ export interface XSSRule {
     description: string;
     example: string;
 }
-
 export interface XSSFinding {
     pattern_name: string;
     description: string;
@@ -30,10 +28,9 @@ export interface XSSFinding {
     position: [number, number];
     example: string;
 }
-
 export interface LLMEvaluation {
     is_true_positive: boolean;
     confidence: number;
     explanation: string;
     recommendation: string;
-} 
+}

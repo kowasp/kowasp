@@ -1,0 +1,50 @@
+export interface XSSVulnerability {
+    type: 'reflected' | 'stored' | 'dom' | 'event-handler' | 'js-url' | 'file-upload' | 'nosql-injection' | 'misconfiguration';
+    severity: 'high' | 'medium' | 'low';
+    location: {
+        file: string;
+        line: number;
+        column: number;
+    };
+    description: string;
+    code: string;
+    remediation: string;
+    confidence: number;
+}
+
+export interface ExpressConfig {
+    helmet: boolean;
+    contentSecurityPolicy: boolean;
+    xssFilter: boolean;
+    noSniff: boolean;
+    frameguard: boolean;
+    hsts: boolean;
+    viewEngine?: string;
+    ejsEscapingDisabled?: boolean;
+}
+
+export interface AnalysisResult {
+    vulnerabilities: XSSVulnerability[];
+    expressConfig: ExpressConfig;
+    missingSecurityHeaders: string[];
+    recommendations: string[];
+}
+
+export interface XSSPattern {
+    id: string;
+    name: string;
+    description: string;
+    pattern: string;
+    severity: 'high' | 'medium' | 'low';
+    category: 'reflected' | 'stored' | 'dom' | 'event-handler' | 'js-url' | 'file-upload' | 'nosql-injection' | 'misconfiguration';
+    remediation: string;
+}
+
+export interface ASTNode {
+    type: string;
+    loc?: {
+        start: { line: number; column: number };
+        end: { line: number; column: number };
+    };
+    [key: string]: any;
+} 

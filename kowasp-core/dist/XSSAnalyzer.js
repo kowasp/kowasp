@@ -1,19 +1,53 @@
-import * as cheerio from 'cheerio';
-import { parse } from '@babel/parser';
-import traverse from '@babel/traverse';
-import { XSSFinding } from './types';
-
-export class XSSAnalyzer {
-    constructor() {}
-
-    private isHTMLFile(content: string): boolean {
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.XSSAnalyzer = void 0;
+const cheerio = __importStar(require("cheerio"));
+const parser_1 = require("@babel/parser");
+const traverse_1 = __importDefault(require("@babel/traverse"));
+class XSSAnalyzer {
+    constructor() { }
+    isHTMLFile(content) {
         return /^\s*<!DOCTYPE\s+html>|^\s*<html/i.test(content);
     }
-
-    private analyzeHTML(content: string): XSSFinding[] {
-        const findings: XSSFinding[] = [];
+    analyzeHTML(content) {
+        const findings = [];
         const $ = cheerio.load(content);
-
         // Check for <script> tags
         $('script').each((i, elem) => {
             findings.push({
@@ -25,7 +59,6 @@ export class XSSAnalyzer {
                 example: '<script>alert("XSS")</script>'
             });
         });
-
         // Check for dangerous event handler attributes (on*)
         $('*').each((i, elem) => {
             if ('attribs' in elem) {
@@ -43,7 +76,6 @@ export class XSSAnalyzer {
                 }
             }
         });
-
         // Check for dangerous attribute values (javascript:, data:)
         $('*').each((i, elem) => {
             if ('attribs' in elem) {
@@ -61,7 +93,6 @@ export class XSSAnalyzer {
                 }
             }
         });
-
         // Check for specific dangerous tags/attributes
         // <img src=...>
         $('img').each((i, elem) => {
@@ -154,7 +185,6 @@ export class XSSAnalyzer {
                 });
             }
         });
-
         // Check for dangerous URLs (javascript:, data:) in <a href> and <img src>
         $('a[href^="javascript:"], a[href^="data:"]').each((i, elem) => {
             findings.push({
@@ -176,7 +206,6 @@ export class XSSAnalyzer {
                 example: `<img src="javascript:alert('XSS')">`
             });
         });
-
         // <meta http-equiv="refresh" content="0;url=javascript:...">
         $('meta[http-equiv]').each((i, elem) => {
             if ('attribs' in elem) {
@@ -189,12 +218,11 @@ export class XSSAnalyzer {
                         severity: 'High',
                         matched_text: $(elem).toString(),
                         position: [0, 0],
-                        example: '<meta http-equiv="refresh" content="0;url=javascript:alert(1)">' 
+                        example: '<meta http-equiv="refresh" content="0;url=javascript:alert(1)">'
                     });
                 }
             }
         });
-
         // <svg> tags with event handlers or <script>
         $('svg').each((i, elem) => {
             if ('attribs' in elem) {
@@ -206,7 +234,7 @@ export class XSSAnalyzer {
                             severity: 'High',
                             matched_text: $(elem).toString(),
                             position: [0, 0],
-                            example: '<svg onload="alert(1)">' 
+                            example: '<svg onload="alert(1)">'
                         });
                     }
                 }
@@ -224,7 +252,6 @@ export class XSSAnalyzer {
                 });
             }
         });
-
         // Suspicious attribute values (encoded JS, expression, url(javascript:))
         $('*').each((i, elem) => {
             if ('attribs' in elem) {
@@ -264,7 +291,6 @@ export class XSSAnalyzer {
                 }
             }
         });
-
         // Suspicious tag names
         const suspiciousTags = ['object', 'embed', 'applet', 'base', 'form', 'link', 'isindex', 'plaintext', 'xss'];
         suspiciousTags.forEach(tag => {
@@ -279,7 +305,6 @@ export class XSSAnalyzer {
                 });
             });
         });
-
         // Malformed tags: <scr<script>ipt>, <img src=...> with missing quotes
         // (Simple regex scan on raw content)
         const malformedPatterns = [
@@ -298,27 +323,21 @@ export class XSSAnalyzer {
                 });
             }
         });
-
         return findings;
     }
-
-    private analyzeJavaScript(content: string): XSSFinding[] {
-        const findings: XSSFinding[] = [];
-        const ast = parse(content, {
+    analyzeJavaScript(content) {
+        const findings = [];
+        const ast = (0, parser_1.parse)(content, {
             sourceType: 'module',
             plugins: ['typescript', 'jsx']
         });
-
-        traverse(ast, {
+        (0, traverse_1.default)(ast, {
             CallExpression(path) {
                 const node = path.node;
                 const callee = node.callee;
-
                 // Dangerous function calls
-                if (
-                    callee.type === 'Identifier' &&
-                    ['eval', 'Function', 'setTimeout', 'setInterval'].includes(callee.name)
-                ) {
+                if (callee.type === 'Identifier' &&
+                    ['eval', 'Function', 'setTimeout', 'setInterval'].includes(callee.name)) {
                     findings.push({
                         pattern_name: callee.name,
                         description: `Use of ${callee.name}() can lead to XSS`,
@@ -328,15 +347,12 @@ export class XSSAnalyzer {
                         example: `${callee.name}(userInput);`
                     });
                 }
-
                 // document.write
-                if (
-                    callee.type === 'MemberExpression' &&
+                if (callee.type === 'MemberExpression' &&
                     callee.object.type === 'Identifier' &&
                     callee.object.name === 'document' &&
                     callee.property.type === 'Identifier' &&
-                    callee.property.name === 'write'
-                ) {
+                    callee.property.name === 'write') {
                     findings.push({
                         pattern_name: 'document.write',
                         description: 'Use of document.write() can lead to XSS',
@@ -347,28 +363,20 @@ export class XSSAnalyzer {
                     });
                 }
             },
-
             AssignmentExpression(path) {
                 const node = path.node;
                 const left = node.left;
-
-                if (
-                    left.type === 'MemberExpression' &&
-                    left.property.type === 'Identifier'
-                ) {
+                if (left.type === 'MemberExpression' &&
+                    left.property.type === 'Identifier') {
                     const obj = left.object;
                     const prop = left.property;
                     let objName = '';
-
                     if (obj.type === 'Identifier') {
                         objName = obj.name;
                     }
-
-                    if (
-                        (prop.name === 'innerHTML' || prop.name === 'outerHTML') ||
+                    if ((prop.name === 'innerHTML' || prop.name === 'outerHTML') ||
                         (obj.type === 'Identifier' && obj.name === 'location' && prop.name === 'href') ||
-                        (obj.type === 'Identifier' && obj.name === 'document' && prop.name === 'cookie')
-                    ) {
+                        (obj.type === 'Identifier' && obj.name === 'document' && prop.name === 'cookie')) {
                         findings.push({
                             pattern_name: `${objName}.${prop.name}`,
                             description: `Assignment to ${objName}.${prop.name} can lead to XSS`,
@@ -380,13 +388,10 @@ export class XSSAnalyzer {
                     }
                 }
             },
-
             JSXAttribute(path) {
                 const node = path.node;
-                if (
-                    node.name.type === 'JSXIdentifier' &&
-                    node.name.name === 'dangerouslySetInnerHTML'
-                ) {
+                if (node.name.type === 'JSXIdentifier' &&
+                    node.name.name === 'dangerouslySetInnerHTML') {
                     findings.push({
                         pattern_name: 'dangerouslySetInnerHTML',
                         description: 'Usage of dangerouslySetInnerHTML can lead to XSS',
@@ -398,24 +403,22 @@ export class XSSAnalyzer {
                 }
             }
         });
-
         return findings;
     }
-
-    public analyze(content: string): XSSFinding[] {
+    analyze(content) {
         if (this.isHTMLFile(content)) {
             return this.analyzeHTML(content);
-        } else {
+        }
+        else {
             return this.analyzeJavaScript(content);
         }
     }
-
-    public displayResults(findings: XSSFinding[]): void {
+    displayResults(findings) {
         console.log('\nXSS Analysis Results:');
         console.log('='.repeat(80));
-
         for (const finding of findings) {
             console.log(`\nPattern: ${finding.pattern_name}\nSeverity: ${finding.severity}\nMatched Text: ${finding.matched_text}\nDescription: ${finding.description}\nExample: ${finding.example}\n${'-'.repeat(80)}`);
         }
     }
-} 
+}
+exports.XSSAnalyzer = XSSAnalyzer;
