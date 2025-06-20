@@ -98,6 +98,77 @@ export class AppService {
     }
   }
 
+  async staticAnalyzeDirectory(file: any): Promise<any> {
+    // file.buffer contains the zip file
+    try {
+      const fs = await import('fs/promises');
+      const fsSync = require('fs'); // For createReadStream
+      const path = await import('path');
+      const os = await import('os');
+      const tmp = await import('tmp-promise');
+      const unzipper = await import('unzipper');
+      const tmpDir = await tmp.dir({ unsafeCleanup: true });
+      const zipPath = path.join(tmpDir.path, 'upload.zip');
+      await fs.writeFile(zipPath, file.buffer);
+      // Extract zip
+      await new Promise((resolve, reject) => {
+        fsSync.createReadStream(zipPath)
+          .pipe(unzipper.Extract({ path: tmpDir.path }))
+          .on('close', resolve)
+          .on('error', reject);
+      });
+      const analyzerPath = path.resolve(__dirname, '../../kowasp-core/dist/index.js');
+      return await new Promise((resolve, reject) => {
+        const analyzer = spawn('node', [analyzerPath, tmpDir.path, '--output-json']);
+        let output = '';
+        let error = '';
+        analyzer.stdout.on('data', (data) => {
+          output += data.toString();
+        });
+        analyzer.stderr.on('data', (data) => {
+          error += data.toString();
+        });
+        analyzer.on('close', async (code) => {
+          await tmpDir.cleanup();
+          if (code === 0) {
+            try {
+              const findings = JSON.parse(output);
+              function stripTempDir(obj: any): any {
+                const FRIENDLY_LABEL = 'Submitted Code';
+                // Match any temp file path ending with 'Submitted Code' or 'analyze-<digits>.js', including macOS Shortcuts temp files
+                const TEMP_FILE_REGEX = /\/var\/folders\/[^\s]+Submitted Code|\/var\/folders\/[^\s]+analyze-\d+\.js|upload\.zip|\/tmp\/[\w\/-]+/g;
+                if (Array.isArray(obj)) return obj.map(stripTempDir);
+                if (obj && typeof obj === 'object') {
+                  const newObj: any = {};
+                  for (const k in obj) {
+                    if (k === 'location' && obj[k]?.file) {
+                      // Replace temp file path with friendly label
+                      newObj[k] = { ...obj[k], file: obj[k].file.replace(TEMP_FILE_REGEX, FRIENDLY_LABEL) };
+                    } else if (typeof obj[k] === 'string') {
+                      // Replace any temp file path in string fields
+                      newObj[k] = obj[k].replace(TEMP_FILE_REGEX, FRIENDLY_LABEL);
+                    } else {
+                      newObj[k] = stripTempDir(obj[k]);
+                    }
+                  }
+                  return newObj;
+                }
+                return obj;
+              }
+              resolve(stripTempDir(findings));
+            } catch (e) {
+              resolve({ error: 'Failed to parse analyzer output', details: output });
+            }
+          } else {
+            resolve({ error: error || 'Analyzer failed' });
+          }
+        });
+      });
+    } catch (err: any) {
+      return { error: err.message || 'Unknown error during directory analysis' };
+    }
+  }
+
   async llmReview(findings: any[]): Promise<any> {
     const prompt = `Review the following static analysis findings for severity, accuracy, and remediation. Return a JSON array with severity, false positive assessment, and improved remediation for each finding.\n\n${JSON.stringify(findings, null, 2)}`;
     const response = await fetch(OLLAMA_ENDPOINT, {

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import path from 'path';
+import JSZip from 'jszip';
 const MonacoEditor = dynamic<any>(() => import('@monaco-editor/react').then(mod => mod.default), { ssr: false });
 
 const TEMP_PREFIX_REGEX = /.*analyze-\d+\.js$/;
@@ -14,6 +15,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [llmLoading, setLlmLoading] = useState(false);
   const [error, setError] = useState('');
+  const [directoryFiles, setDirectoryFiles] = useState<FileList | null>(null);
+  const [uploadMode, setUploadMode] = useState<'code' | 'directory'>('code');
+  const directoryInputRef = useRef<HTMLInputElement>(null);
 
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,33 +61,118 @@ export default function Dashboard() {
     }
   };
 
+  const handleDirectoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDirectoryFiles(null);
+    setTimeout(() => {
+      setDirectoryFiles(e.target.files);
+    }, 0);
+    setFindings([]);
+    setError('');
+  };
+
+  const handleAnalyzeDirectory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!directoryFiles) return;
+    setLoading(true);
+    setError('');
+    setFindings([]);
+    setLlmResponse('');
+    try {
+      const zip = new JSZip();
+      Array.from(directoryFiles).forEach(file => {
+        // Use webkitRelativePath to preserve directory structure
+        zip.file(file.webkitRelativePath, file);
+      });
+      const zipped = await zip.generateAsync({ type: 'blob' });
+      const formData = new FormData();
+      formData.append('directory', zipped, 'upload.zip');
+      const res = await fetch('http://localhost:3001/analyze-directory', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Backend error');
+      const data = await res.json();
+      setFindings(data.vulnerabilities || data.findings || []);
+    } catch (err: any) {
+      setError(err.message || 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (directoryInputRef.current) {
+      directoryInputRef.current.setAttribute('webkitdirectory', '');
+      directoryInputRef.current.setAttribute('directory', '');
+      directoryInputRef.current.value = '';
+    }
+    setDirectoryFiles(null);
+    setFindings([]);
+    setError('');
+  }, [uploadMode]);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-8">
       <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
-      <form onSubmit={handleAnalyze} className="flex flex-col gap-4 w-full max-w-xl">
-        <MonacoEditor
-          height="200px"
-          defaultLanguage="javascript"
-          theme="vs-dark"
-          value={code}
-          onChange={(value: string | undefined) => setCode(value || '')}
-          options={{
-            fontSize: 14,
-            minimap: { enabled: false },
-            lineNumbers: 'on',
-            scrollBeyondLastLine: false,
-            wordWrap: 'on',
-            automaticLayout: true,
-          }}
-        />
+      <div className="flex gap-4 mb-4">
         <button
-          type="submit"
-          className="bg-blue-600 text-white rounded px-4 py-2 disabled:opacity-50"
-          disabled={loading || !code.trim()}
-        >
-          {loading ? 'Analyzing...' : 'Analyze (Static Scan)'}
-        </button>
-      </form>
+          className={`px-4 py-2 rounded ${uploadMode === 'code' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}
+          onClick={() => setUploadMode('code')}
+        >Paste Code</button>
+        <button
+          className={`px-4 py-2 rounded ${uploadMode === 'directory' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}
+          onClick={() => setUploadMode('directory')}
+        >Upload Directory</button>
+      </div>
+      {uploadMode === 'code' && (
+        <form onSubmit={handleAnalyze} className="flex flex-col gap-4 w-full max-w-xl">
+          <MonacoEditor
+            height="200px"
+            defaultLanguage="javascript"
+            theme="vs-dark"
+            value={code}
+            onChange={(value: string | undefined) => setCode(value || '')}
+            options={{
+              fontSize: 14,
+              minimap: { enabled: false },
+              lineNumbers: 'on',
+              scrollBeyondLastLine: false,
+              wordWrap: 'on',
+              automaticLayout: true,
+            }}
+          />
+          <button
+            type="submit"
+            className="bg-blue-600 text-white rounded px-4 py-2 disabled:opacity-50"
+            disabled={loading || !code.trim()}
+          >
+            {loading ? 'Analyzing...' : 'Analyze (Static Scan)'}
+          </button>
+        </form>
+      )}
+      {uploadMode === 'directory' && (
+        <form onSubmit={handleAnalyzeDirectory} className="flex flex-col gap-4 w-full max-w-xl">
+          <input
+            type="file"
+            ref={directoryInputRef}
+            multiple
+            onChange={handleDirectoryChange}
+            className="mb-2"
+          />
+          {directoryFiles && (
+            <div className="text-xs text-gray-400 mb-2">
+              {Array.from(directoryFiles).map(f => <div key={f.name}>{f.webkitRelativePath}</div>)}
+            </div>
+          )}
+          <button
+            type="submit"
+            className="bg-blue-600 text-white rounded px-4 py-2 disabled:opacity-50"
+            disabled={loading || !directoryFiles || directoryFiles.length === 0}
+          >
+            {loading ? 'Analyzing...' : 'Analyze Directory'}
+          </button>
+        </form>
+      )}
       {loading && (
         <div className="flex items-center gap-2 mt-4 text-blue-700">
           <svg className="animate-spin h-5 w-5 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

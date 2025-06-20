@@ -1,5 +1,8 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { AppService } from './app.service';
+import { UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Express } from 'express';
 
 class LlmRequestDto {
   prompt: string;
@@ -41,5 +44,13 @@ export class AppController {
   @Post('/llm-review')
   async llmReview(@Body() body: LlmReviewRequestDto) {
     return this.appService.llmReview(body.findings);
+  }
+
+  @Post('/analyze-directory')
+  @UseInterceptors(FileInterceptor('directory'))
+  async analyzeDirectory(@UploadedFile() file: any) {
+    // TODO: Type file as Express.Multer.File if types are available
+    // TODO: Implement staticAnalyzeDirectory in AppService
+    return this.appService.staticAnalyzeDirectory(file);
   }
 }

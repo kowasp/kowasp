@@ -18,7 +18,8 @@
     "next": "^15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "turbopack": "^0.0.1"
+    "turbopack": "^0.0.1",
+    "jszip": "^3.10.1"
   },
   "devDependencies": {
     "@cloudflare/next-on-pages": "^1.13.8",
