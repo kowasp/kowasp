@@ -93,4 +93,4 @@ async function main(target: string, options: { outputHtml?: string, outputJson?:
         console.error(chalk.red('Error during analysis:'), error);
         process.exit(1);
     }
-} 
+}
