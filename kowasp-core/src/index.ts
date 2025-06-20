@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { XSSAnalyzer } from './analyzer/XSSAnalyzer';
 import { HtmlReporter } from './reporting/HtmlReporter';
 import chalk from 'chalk';
+import * as fs from 'fs';
 
 // CLI setup
 const program = new Command();
@@ -10,15 +11,19 @@ program
     .name('kowasp')
     .description('XSS Scanner with AST analysis')
     .version('1.0.0')
-    .argument('<targetDir>', 'Target directory to analyze')
+    .argument('<target>', 'Target file or directory to analyze')
     .option('--output-html <path>', 'Path to save the HTML report')
     .option('--output-json', 'Output findings as JSON')
     .action(main);
 
 program.parse();
 
-async function main(targetDir: string, options: { outputHtml?: string, outputJson?: boolean }) {
-    const analyzer = new XSSAnalyzer(targetDir);
+async function main(target: string, options: { outputHtml?: string, outputJson?: boolean }) {
+    if (!fs.existsSync(target)) {
+        console.error(`Target path does not exist: ${target}`);
+        process.exit(1);
+    }
+    const analyzer = new XSSAnalyzer(target);
     const result = await analyzer.analyze();
 
     if (options.outputJson) {
@@ -28,7 +33,7 @@ async function main(targetDir: string, options: { outputHtml?: string, outputJso
     }
 
     console.log(chalk.blue('Starting XSS analysis...'));
-    console.log(chalk.blue(`Target directory: ${targetDir}`));
+    console.log(chalk.blue(`Target directory: ${target}`));
 
     try {
         // Print results to console

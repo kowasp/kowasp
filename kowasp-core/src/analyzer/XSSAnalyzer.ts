@@ -10,7 +10,7 @@ export class XSSAnalyzer {
     private ollamaEndpoint = 'http://localhost:11434/api/generate';
     private ollamaModel = 'mistral';
 
-    constructor(private targetDir: string) {}
+    constructor(private target: string) {}
 
     public async analyze(): Promise<AnalysisResult> {
         const files = await this.findExpressFiles();
@@ -83,16 +83,19 @@ export class XSSAnalyzer {
     }
 
     private async findExpressFiles(): Promise<string[]> {
+        const stat = fs.statSync(this.target);
+        if (stat.isFile()) {
+            return [this.target];
+        }
+        // Directory: glob for JS/JSX files
         const patterns = [
             '**/*.js',
             '**/*.jsx'
         ];
-
         const files = await Promise.all(
-            patterns.map(pattern => glob(pattern, { cwd: this.targetDir, ignore: ['node_modules/**', 'dist/**', 'test/**'] }))
+            patterns.map(pattern => glob(pattern, { cwd: this.target, ignore: ['node_modules/**', 'dist/**', 'test/**'] }))
         );
-
-        return files.flat().map(file => path.join(this.targetDir, file));
+        return files.flat().map(file => path.join(this.target, file));
     }
 
     private mergeConfigs(config1: any, config2: any): any {
