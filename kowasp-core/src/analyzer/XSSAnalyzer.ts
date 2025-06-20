@@ -165,7 +165,13 @@ Format the response as JSON with keys: description, remediation, confidence`;
 
             const data = await response.json();
             if (typeof data === 'object' && data !== null && 'response' in data && typeof (data as any).response === 'string') {
-                return JSON.parse((data as any).response);
+                try {
+                    // Remove control characters except for newlines and tabs
+                    const sanitized = (data as any).response.replace(/[\u0000-\u0019]+/g, '');
+                    return JSON.parse(sanitized);
+                } catch (e) {
+                    return { raw: (data as any).response, error: 'Invalid JSON from LLM' };
+                }
             } else {
                 throw new Error('Unexpected response format from Ollama');
             }

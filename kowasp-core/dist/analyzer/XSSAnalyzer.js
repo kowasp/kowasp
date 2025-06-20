@@ -182,7 +182,14 @@ Format the response as JSON with keys: description, remediation, confidence`;
             }
             const data = await response.json();
             if (typeof data === 'object' && data !== null && 'response' in data && typeof data.response === 'string') {
-                return JSON.parse(data.response);
+                try {
+                    // Remove control characters except for newlines and tabs
+                    const sanitized = data.response.replace(/[\u0000-\u0019]+/g, '');
+                    return JSON.parse(sanitized);
+                }
+                catch (e) {
+                    return { raw: data.response, error: 'Invalid JSON from LLM' };
+                }
             }
             else {
                 throw new Error('Unexpected response format from Ollama');

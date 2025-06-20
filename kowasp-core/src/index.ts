@@ -12,18 +12,25 @@ program
     .version('1.0.0')
     .argument('<targetDir>', 'Target directory to analyze')
     .option('--output-html <path>', 'Path to save the HTML report')
+    .option('--output-json', 'Output findings as JSON')
     .action(main);
 
 program.parse();
 
-async function main(targetDir: string, options: { outputHtml?: string }) {
+async function main(targetDir: string, options: { outputHtml?: string, outputJson?: boolean }) {
+    const analyzer = new XSSAnalyzer(targetDir);
+    const result = await analyzer.analyze();
+
+    if (options.outputJson) {
+        // Output ONLY JSON, no banners or extra text
+        console.log(JSON.stringify(result, null, 2));
+        return;
+    }
+
     console.log(chalk.blue('Starting XSS analysis...'));
     console.log(chalk.blue(`Target directory: ${targetDir}`));
 
     try {
-        const analyzer = new XSSAnalyzer(targetDir);
-        const result = await analyzer.analyze();
-
         // Print results to console
         console.log('\n' + chalk.green('Analysis Results:'));
         console.log('==================');
