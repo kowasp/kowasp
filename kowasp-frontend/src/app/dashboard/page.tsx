@@ -2,7 +2,10 @@
 
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
+import path from 'path';
 const MonacoEditor = dynamic<any>(() => import('@monaco-editor/react').then(mod => mod.default), { ssr: false });
+
+const TEMP_PREFIX_REGEX = /.*analyze-\d+\.js$/;
 
 export default function Dashboard() {
   const [code, setCode] = useState('');
@@ -92,19 +95,22 @@ export default function Dashboard() {
       )}
       {error && <div className="text-red-600">Error: {error}</div>}
       {findings.length > 0 && !loading && (
-        <div className="mt-4 p-4 border rounded bg-gray-100 w-full max-w-xl">
+        <div className="mt-4 p-4 border rounded bg-stone-800 w-full max-w-xl">
           <strong>Static Analysis Findings:</strong>
           <ul className="list-disc ml-6">
             {findings.map((f, i) => (
-              <li key={i} className="mb-2">
+              <li key={i} className="mb-2 break-words">
                 <div><b>Type:</b> {f.type}</div>
                 <div><b>Severity:</b> {f.severity}</div>
-                <div><b>Location:</b> {f.location?.line && f.location.line > 0
-                  ? `${f.location.file}:${f.location.line}`
-                  : `${f.location.file} (global/misconfiguration)`}
-                </div>
+                <div><b>Location:</b> {(() => {
+                  if (f.location?.file) {
+                    const match = f.location.file.match(/analyze-\d+\.js$/);
+                    return match ? `${match[0]}${f.location.line && f.location.line > 0 ? ':' + f.location.line : ' (global/misconfiguration)'}` : `${f.location.file}${f.location.line && f.location.line > 0 ? ':' + f.location.line : ' (global/misconfiguration)'}`;
+                  }
+                  return '';
+                })()}</div>
                 <div><b>Description:</b> {f.description}</div>
-                {f.code && <pre className="bg-white p-2 rounded text-xs overflow-x-auto">{f.code}</pre>}
+                {f.code && <pre className="bg-white p-2 rounded text-xs overflow-x-auto break-words whitespace-pre-wrap">{f.code}</pre>}
                 {f.remediation && <div><b>Remediation:</b> {f.remediation}</div>}
               </li>
             ))}
@@ -131,9 +137,29 @@ export default function Dashboard() {
         <div className="text-gray-500 mt-4">No findings to display yet. Paste your code and click Analyze.</div>
       )}
       {llmResponse && !llmLoading && (
-        <div className="mt-4 p-4 border rounded bg-yellow-100 w-full max-w-xl whitespace-pre-wrap">
+        <div className="mt-4 p-4 border rounded bg-slate-700 w-full max-w-xl whitespace-pre-wrap break-words">
           <strong>LLM Review:</strong>
-          <div>{llmResponse}</div>
+          <div>
+            {(() => {
+              try {
+                const parsed = JSON.parse(llmResponse);
+                if (Array.isArray(parsed)) {
+                  return (
+                    <ul className="list-disc ml-6">
+                      {parsed.map((item, idx) => (
+                        <li key={idx} className="mb-2">
+                          {Object.entries(item).map(([k, v]) => (
+                            <div key={k}><b>{k}:</b> {typeof v === 'object' ? JSON.stringify(v) : String(v)}</div>
+                          ))}
+                        </li>
+                      ))}
+                    </ul>
+                  );
+                }
+              } catch (e) {}
+              return <pre>{llmResponse}</pre>;
+            })()}
+          </div>
         </div>
       )}
     </div>

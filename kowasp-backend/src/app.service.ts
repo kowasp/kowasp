@@ -32,42 +32,68 @@ export class AppService {
 
   async staticAnalyze(code: string, filename?: string): Promise<any> {
     try {
-      // Use the CLI analyzer from kowasp-core by spawning a process
-      // Write code to a temp file, run analyzer, and return findings
       const fs = await import('fs/promises');
       const path = await import('path');
       const os = await import('os');
       const tmpDir = os.tmpdir();
       const tempFile = path.join(tmpDir, filename || `analyze-${Date.now()}.js`);
+      console.log('[staticAnalyze] Writing temp file:', tempFile);
       await fs.writeFile(tempFile, code, 'utf-8');
+      const analyzerPath = path.resolve(__dirname, '../../kowasp-core/dist/index.js');
+      console.log('[staticAnalyze] Spawning analyzer:', analyzerPath, tempFile);
       return await new Promise((resolve, reject) => {
-        const analyzer = spawn('node', [path.resolve(__dirname, '../../kowasp-core/dist/index.js'), tempFile, '--output-json']);
+        const analyzer = spawn('node', [analyzerPath, tempFile, '--output-json']);
         let output = '';
         let error = '';
         analyzer.stdout.on('data', (data) => {
+          console.log('[staticAnalyze] Analyzer stdout:', data.toString());
           output += data.toString();
         });
         analyzer.stderr.on('data', (data) => {
+          console.error('[staticAnalyze] Analyzer stderr:', data.toString());
           error += data.toString();
         });
         analyzer.on('close', (code) => {
+          console.log('[staticAnalyze] Analyzer process closed with code:', code);
           fs.unlink(tempFile).catch(() => {});
           if (code === 0) {
             try {
               const findings = JSON.parse(output);
-              resolve(findings);
+              function stripTempDir(obj: any): any {
+                const FRIENDLY_LABEL = 'Submitted Code';
+                // Match any temp file path ending with 'Submitted Code' or 'analyze-<digits>.js', including macOS Shortcuts temp files
+                const TEMP_FILE_REGEX = /\/var\/folders\/[^\s]+Submitted Code|\/var\/folders\/[^\s]+analyze-\d+\.js/g;
+                if (Array.isArray(obj)) return obj.map(stripTempDir);
+                if (obj && typeof obj === 'object') {
+                  const newObj: any = {};
+                  for (const k in obj) {
+                    if (k === 'location' && obj[k]?.file) {
+                      // Replace temp file path with friendly label
+                      newObj[k] = { ...obj[k], file: FRIENDLY_LABEL };
+                    } else if (typeof obj[k] === 'string') {
+                      // Replace any temp file path in string fields
+                      newObj[k] = obj[k].replace(TEMP_FILE_REGEX, FRIENDLY_LABEL);
+                    } else {
+                      newObj[k] = stripTempDir(obj[k]);
+                    }
+                  }
+                  return newObj;
+                }
+                return obj;
+              }
+              resolve(stripTempDir(findings));
             } catch (e) {
-              console.error('Failed to parse analyzer output:', output, e);
+              console.error('[staticAnalyze] Failed to parse analyzer output:', output, e);
               resolve({ error: 'Failed to parse analyzer output', details: output });
             }
           } else {
-            console.error('Analyzer process failed:', error);
+            console.error('[staticAnalyze] Analyzer process failed:', error);
             resolve({ error: error || 'Analyzer failed' });
           }
         });
       });
     } catch (err: any) {
-      console.error('Static analysis error:', err);
+      console.error('[staticAnalyze] Static analysis error:', err);
       return { error: err.message || 'Unknown error during static analysis' };
     }
   }
