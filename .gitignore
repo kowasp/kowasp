@@ -1,0 +1,32 @@
+# Node
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build output
+dist/
+build/
+.next/
+coverage/
+
+# OS/Editor
+.DS_Store
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Env
+.env
+.env.*
+
+# Temp
+*.zip
+tmp/
+temp/
+
+# Misc
+*.swp 
