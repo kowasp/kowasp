@@ -1,50 +1,51 @@
-export const runtime = "edge"; // cloudflare pages
+'use client';
 
-export default async function Home() {
-  //const backendUrl = "http://localhost:3001";
-  
-  //const res = await fetch(`${backendUrl}`, {
-    //method: "GET",
-  //})
-    //.then((response) => {
-      //if (!response.ok) {
-        //throw new Error("Network response was not ok");
-      //}
-      //return response.json();
-    //})
-    //.then((data) => {
-      //console.log("Backend is up and running!", data);
-      //return data;
-    //})
-    //.catch((error) => {
-      //console.error("Error fetching data:", error);
-    //});
-  //console.log(res);
+import { useAuthStore } from '../stores/auth';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import Link from 'next/link';
+
+export default function HomePage() {
+  const token = useAuthStore((state) => state.token);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (token) {
+      router.replace('/dashboard');
+    }
+  }, [token, router]);
+
+  if (token) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-black">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <> 
-      <main className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-        <div className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-          <h1 className="text-white bold text-6xl">KOwasp</h1>
-          <p className="text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)] mb-2">
-            a solution to all owasp top 10 vulnerabilities
-          </p>
-
-          <div className="flex gap-4 items-center flex-col sm:flex-row">
-            <a
-              className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-              href="https://www.github.com/kowasp/kowasp"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Read our docs
-            </a>
-          </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="text-center max-w-2xl mx-auto p-8">
+        <h1 className="text-5xl font-bold text-black mb-4">Welcome to KOWASP</h1>
+        <p className="text-xl text-black mb-8">Your friendly neighborhood OWASP scanner.</p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link 
+            href="/signup" 
+            className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+          >
+            Sign Up
+          </Link>
+          <Link 
+            href="/login" 
+            className="px-8 py-3 border border-gray-300 text-black rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+          >
+            Login
+          </Link>
         </div>
-      </main>
-      <footer className="row-start-3 flex items-center justify-center">
-      Building... Stay tuned!
-      </footer>
-    </>
+      </div>
+    </div>
   );
 }

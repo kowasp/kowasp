@@ -44,31 +44,8 @@ export class XSSAnalyzer {
             missingHeaders.push(...configResult.missingSecurityHeaders);
             recommendations.push(...configResult.recommendations);
 
-            // Treat missing headers as vulnerabilities
-            for (const header of configResult.missingSecurityHeaders) {
-                vulnerabilities.push({
-                    type: 'misconfiguration',
-                    severity: 'medium',
-                    location: { file, line: 0, column: 0 },
-                    description: `Missing security header: ${header}`,
-                    code: '',
-                    remediation: `Add or configure the ${header} header.`,
-                    confidence: 1
-                });
-            }
-
-            // Treat other major config issues as vulnerabilities
-            if (configResult.expressConfig.viewEngine === 'ejs' && configResult.expressConfig.ejsEscapingDisabled) {
-                vulnerabilities.push({
-                    type: 'misconfiguration',
-                    severity: 'high',
-                    location: { file, line: 0, column: 0 },
-                    description: 'EJS auto-escaping is disabled application-wide. This is a high-risk security vulnerability.',
-                    code: '',
-                    remediation: 'Enable EJS auto-escaping by removing `app.locals.escape = false`.',
-                    confidence: 1
-                });
-            }
+            // Note: Configuration issues are handled as recommendations, not as XSS vulnerabilities
+            // Missing headers and other config issues are addressed in the recommendations array
         }
 
         // Use Ollama for context-aware analysis

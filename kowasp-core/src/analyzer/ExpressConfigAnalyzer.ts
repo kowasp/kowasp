@@ -2,6 +2,7 @@ import { ExpressConfig, AnalysisResult } from '../types/analyzer';
 import * as esprima from 'esprima';
 import * as estraverse from 'estraverse';
 import { ASTNode } from '../types/analyzer';
+import fetch from 'node-fetch';
 
 export class ExpressConfigAnalyzer {
     private config: ExpressConfig = {
@@ -17,6 +18,15 @@ export class ExpressConfigAnalyzer {
 
     private missingHeaders: string[] = [];
     private recommendations: string[] = [];
+
+    // New fields for additional config
+    private customHeaders: { [header: string]: boolean } = {};
+    private securityMiddleware: { [name: string]: boolean } = {};
+    private expressDisabled: string[] = [];
+    private sessionConfig: { [key: string]: any } = {};
+
+    private ollamaEndpoint = 'http://localhost:11434/api/generate';
+    private ollamaModel = 'mistral';
 
     constructor(private filePath: string) {}
 
@@ -68,6 +78,29 @@ export class ExpressConfigAnalyzer {
 
         if (this.isEjsEscapingDisabled(node)) {
             this.config.ejsEscapingDisabled = true;
+        }
+
+        // New: Check for direct header setting
+        if (this.isSetHeaderCall(node)) {
+            const header = this.getSetHeaderName(node);
+            if (header) this.customHeaders[header] = true;
+        }
+
+        // New: Check for security middleware
+        if (this.isSecurityMiddleware(node)) {
+            const name = this.getSecurityMiddlewareName(node);
+            if (name) this.securityMiddleware[name] = true;
+        }
+
+        // New: Check for disabling Express features
+        if (this.isDisableCall(node)) {
+            const feature = this.getDisabledFeature(node);
+            if (feature) this.expressDisabled.push(feature);
+        }
+
+        // New: Check for session/cookie middleware
+        if (this.isSessionMiddleware(node)) {
+            this.sessionConfig = this.getSessionConfig(node);
         }
     }
 
@@ -167,6 +200,58 @@ export class ExpressConfigAnalyzer {
                node.right?.value === false;
     }
 
+    // --- New AST check helpers ---
+    private isSetHeaderCall(node: ASTNode): boolean {
+        return node.type === 'CallExpression' &&
+            node.callee?.type === 'MemberExpression' &&
+            node.callee?.property?.name === 'setHeader' &&
+            node.arguments?.[0]?.type === 'Literal';
+    }
+    private getSetHeaderName(node: ASTNode): string | undefined {
+        return node.arguments?.[0]?.value;
+    }
+    private isSecurityMiddleware(node: ASTNode): boolean {
+        return node.type === 'CallExpression' &&
+            node.callee?.type === 'MemberExpression' &&
+            node.callee?.object?.name === 'app' &&
+            node.callee?.property?.name === 'use' &&
+            node.arguments?.[0]?.type === 'CallExpression' &&
+            ['csurf', 'rateLimit', 'expressRateLimit'].includes(node.arguments?.[0]?.callee?.name);
+    }
+    private getSecurityMiddlewareName(node: ASTNode): string | undefined {
+        return node.arguments?.[0]?.callee?.name;
+    }
+    private isDisableCall(node: ASTNode): boolean {
+        return node.type === 'CallExpression' &&
+            node.callee?.type === 'MemberExpression' &&
+            node.callee?.object?.name === 'app' &&
+            node.callee?.property?.name === 'disable' &&
+            node.arguments?.[0]?.type === 'Literal';
+    }
+    private getDisabledFeature(node: ASTNode): string | undefined {
+        return node.arguments?.[0]?.value;
+    }
+    private isSessionMiddleware(node: ASTNode): boolean {
+        return node.type === 'CallExpression' &&
+            node.callee?.type === 'MemberExpression' &&
+            node.callee?.object?.name === 'app' &&
+            node.callee?.property?.name === 'use' &&
+            node.arguments?.[0]?.type === 'CallExpression' &&
+            ['session', 'cookieSession', 'expressSession'].includes(node.arguments?.[0]?.callee?.name);
+    }
+    private getSessionConfig(node: ASTNode): any {
+        // Return the config object if present
+        const configArg = node.arguments?.[0]?.arguments?.[0];
+        if (configArg && configArg.type === 'ObjectExpression') {
+            const config: any = {};
+            configArg.properties?.forEach((prop: ASTNode) => {
+                if (prop.key?.name) config[prop.key.name] = prop.value?.value;
+            });
+            return config;
+        }
+        return {};
+    }
+
     private generateRecommendations(): void {
         if (!this.config.helmet) {
             this.recommendations.push('Install and configure helmet middleware for security headers');
@@ -201,6 +286,58 @@ export class ExpressConfigAnalyzer {
             this.recommendations.push('EJS auto-escaping is disabled application-wide. This is a high-risk security vulnerability. Enable it by removing `app.locals.escape = false`.');
         } else if (this.config.viewEngine) {
             this.recommendations.push(`Template engine '${this.config.viewEngine}' is in use. Ensure that output is properly escaped to prevent XSS. For EJS, do not use <%- ... %>. For Pug, do not use != or #{} syntax with untrusted data.`);
+        }
+    }
+
+    // --- LLM Integration ---
+    public async analyzeWithLLM(code: string): Promise<AnalysisResult> {
+        const result = this.analyze(code);
+        const summary = this.createConfigSummary();
+        const prompt = this.createLLMPrompt(summary);
+        const llmAnalysis = await this.queryOllama(prompt);
+        // Merge LLM output into recommendations
+        if (llmAnalysis && llmAnalysis.recommendations) {
+            result.recommendations.push(...llmAnalysis.recommendations);
+        }
+        // Note: Configuration issues are handled as recommendations, not as XSS vulnerabilities
+        return result;
+    }
+    private createConfigSummary(): string {
+        return `Helmet: ${this.config.helmet}\nCSP: ${this.config.contentSecurityPolicy}\nXSS Filter: ${this.config.xssFilter}\nNoSniff: ${this.config.noSniff}\nFrameguard: ${this.config.frameguard}\nHSTS: ${this.config.hsts}\nViewEngine: ${this.config.viewEngine}\nEJSEscapingDisabled: ${this.config.ejsEscapingDisabled}\nCustomHeaders: ${JSON.stringify(this.customHeaders)}\nSecurityMiddleware: ${JSON.stringify(this.securityMiddleware)}\nExpressDisabled: ${JSON.stringify(this.expressDisabled)}\nSessionConfig: ${JSON.stringify(this.sessionConfig)}`;
+    }
+    private createLLMPrompt(summary: string): string {
+        return `Analyze this Express configuration for XSS and related security risks.\nConfig summary:\n${summary}\n\nPlease provide:\n1. A context-aware evaluation of the security posture\n2. Specific recommendations for improvement\n3. Severity (high/medium/low)\n4. A remediation summary\n\nFormat the response as JSON with keys: description, recommendations, severity, remediation.`;
+    }
+    private async queryOllama(prompt: string): Promise<any> {
+        try {
+            const response = await fetch(this.ollamaEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: this.ollamaModel,
+                    prompt: prompt,
+                    stream: false
+                })
+            });
+            if (!response.ok) {
+                throw new Error(`Ollama API error: ${response.statusText}`);
+            }
+            const data = await response.json();
+            if (typeof data === 'object' && data !== null && 'response' in data && typeof (data as any).response === 'string') {
+                try {
+                    const sanitized = (data as any).response.replace(/[\u0000-\u0019]+/g, '');
+                    return JSON.parse(sanitized);
+                } catch (e) {
+                    return { raw: (data as any).response, error: 'Invalid JSON from LLM' };
+                }
+            } else {
+                throw new Error('Unexpected response format from Ollama');
+            }
+        } catch (error) {
+            console.error('Error querying Ollama:', error);
+            return {};
         }
     }
 } 

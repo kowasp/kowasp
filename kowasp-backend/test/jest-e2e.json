@@ -5,5 +5,14 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "transformIgnorePatterns": [
+    "node_modules/(?!(.*\\.mjs$))"
+  ],
+  "setupFilesAfterEnv": ["<rootDir>/jest-e2e.setup.js"],
+  "globals": {
+    "ts-jest": {
+      "allowJs": true
+    }
   }
 }

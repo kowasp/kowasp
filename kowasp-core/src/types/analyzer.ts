@@ -1,5 +1,5 @@
 export interface XSSVulnerability {
-    type: 'reflected' | 'stored' | 'dom' | 'event-handler' | 'js-url' | 'file-upload' | 'nosql-injection' | 'misconfiguration';
+    type: 'reflected' | 'stored' | 'dom' | 'event-handler' | 'js-url' | 'css' | 'framework';
     severity: 'high' | 'medium' | 'low';
     location: {
         file: string;
@@ -36,7 +36,7 @@ export interface XSSPattern {
     description: string;
     pattern: string;
     severity: 'high' | 'medium' | 'low';
-    category: 'reflected' | 'stored' | 'dom' | 'event-handler' | 'js-url' | 'file-upload' | 'nosql-injection' | 'misconfiguration';
+    category: 'reflected' | 'stored' | 'dom' | 'event-handler' | 'js-url' | 'css' | 'framework';
     remediation: string;
 }
 

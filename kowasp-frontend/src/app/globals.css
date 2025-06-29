@@ -7,15 +7,67 @@
   --foreground: #171717;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Force light mode */
+html {
+  background-color: #ffffff;
+  color-scheme: light;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: #171717;
+  background: #ffffff;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Override any dark mode classes */
+.dark {
+  background-color: #ffffff;
+  color: #171717;
+}
+
+.dark body {
+  background-color: #ffffff;
+  color: #171717;
+}
+
+/* Remove dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #ffffff;
+    --foreground: #171717;
+  }
+  
+  html {
+    background-color: #ffffff;
+    color-scheme: light;
+  }
+  
+  body {
+    background-color: #ffffff;
+    color: #171717;
+  }
+}
+
+/* Ensure button colors are properly applied */
+button {
+  color: inherit;
+}
+
+button.bg-blue-600 {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+button.bg-green-600 {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+}
+
+button.bg-red-100 {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+button.text-red-800 {
+  color: #991b1b !important;
 }

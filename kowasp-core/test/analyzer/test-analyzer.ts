@@ -1,44 +1,14 @@
-import { readFileSync } from 'fs';
-import { XSSAnalyzer } from '../src/XSSAnalyzer';
+import { ExpressConfigAnalyzer } from '../../src/analyzer/ExpressConfigAnalyzer';
+import * as fs from 'fs';
 
-// Test HTML content with potential XSS vulnerabilities
-const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Test Page</title>
-</head>
-<body>
-    <div id="user-input">
-        <script>eval('alert(1)')</script>
-        <img src="x" onerror="alert('XSS')">
-        <a href="javascript:alert('XSS')">Click me</a>
-    </div>
-</body>
-</html>
-`;
-
-// Test JavaScript content with potential XSS vulnerabilities
-const jsContent = `
-function processUserInput(input) {
-    document.write(input);
-    eval(input);
-    location.href = input;
-    document.cookie = input;
+async function testExpressConfigAnalyzerWithLLM() {
+    const code = fs.readFileSync(require.resolve('../../examples/secure-app/app.js'), 'utf-8');
+    const analyzer = new ExpressConfigAnalyzer('examples/secure-app/app.js');
+    const result = await analyzer.analyzeWithLLM(code);
+    console.log('ExpressConfigAnalyzer LLM-enhanced result:', JSON.stringify(result, null, 2));
 }
-`;
 
-// Create analyzer instance
-const analyzer = new XSSAnalyzer();
-
-// Analyze HTML content
-console.log('\nAnalyzing HTML content:');
-console.log('='.repeat(80));
-const htmlFindings = analyzer.analyze(htmlContent);
-analyzer.displayResults(htmlFindings);
-
-// Analyze JavaScript content
-console.log('\nAnalyzing JavaScript content:');
-console.log('='.repeat(80));
-const jsFindings = analyzer.analyze(jsContent);
-analyzer.displayResults(jsFindings); 
+// Run the test if this file is executed directly
+if (require.main === module) {
+    testExpressConfigAnalyzerWithLLM();
+} 
