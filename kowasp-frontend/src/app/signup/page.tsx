@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuthStore } from "../../stores/auth";
 import apiClient from "../../lib/api";
@@ -11,7 +11,18 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const login = useAuthStore((state) => state.login);
+  const { token, user } = useAuthStore();
   const router = useRouter();
+
+  useEffect(() => {
+    if (token && user) {
+      if (user.role === "admin") {
+        router.replace("/admin/dashboard");
+      } else {
+        router.replace("/dashboard");
+      }
+    }
+  }, [token, user, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -30,8 +41,14 @@ export default function SignupPage() {
         email: form.email,
         password: form.password,
       });
-      login(response.data.token, response.data.user);
-      router.push("/dashboard");
+      login(response.data.access_token, response.data.user);
+      
+      // Redirect based on user role (new users are typically regular users)
+      if (response.data.user.role === 'admin') {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string };
       setError(error?.response?.data?.message || error.message || 'Signup failed');

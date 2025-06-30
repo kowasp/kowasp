@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Delete, Param, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -19,6 +19,12 @@ export class AdminController {
   @Roles('admin')
   getAllUsers() {
     return this.usersService.findAll();
+  }
+
+  @Delete('users/:id')
+  @Roles('admin')
+  deleteUser(@Param('id') id: string) {
+    return this.usersService.delete(id);
   }
 
   @Get('projects')

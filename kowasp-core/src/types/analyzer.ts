@@ -1,3 +1,5 @@
+import type { Node as BabelNode } from '@babel/types';
+
 export interface XSSVulnerability {
     type: 'reflected' | 'stored' | 'dom' | 'event-handler' | 'js-url' | 'css' | 'framework';
     severity: 'high' | 'medium' | 'low';
@@ -40,11 +42,4 @@ export interface XSSPattern {
     remediation: string;
 }
 
-export interface ASTNode {
-    type: string;
-    loc?: {
-        start: { line: number; column: number };
-        end: { line: number; column: number };
-    };
-    [key: string]: any;
-} 
+export type ASTNode = BabelNode; 

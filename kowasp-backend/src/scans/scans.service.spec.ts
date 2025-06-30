@@ -102,6 +102,15 @@ describe('ScansService', () => {
   describe('create', () => {
     it('should create a new scan and start analysis', async () => {
       mockScanInstance.save.mockResolvedValue(mockScanInstance);
+
+      const mockAnalysisResult: AnalysisResult = {
+        vulnerabilities: [],
+        recommendations: [],
+        expressConfig: { helmet: false, contentSecurityPolicy: false, xssFilter: false, noSniff: false, frameguard: false, hsts: false },
+        missingSecurityHeaders: [],
+      };
+      mockXSSAnalyzer.analyze.mockResolvedValue(mockAnalysisResult);
+
       const result = await service.create(mockProject as ProjectDocument);
       expect(mockScanInstance.save).toHaveBeenCalled();
       expect(result).toEqual(mockScanInstance);

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "echo \"No client-side tests configured.\" && exit 0",
     "pages:build": "npx @cloudflare/next-on-pages",
     "preview": "npm run pages:build && wrangler pages dev",
     "deploy": "npm run pages:build && wrangler pages deploy"
@@ -17,6 +18,7 @@
     "@uiw/react-textarea-code-editor": "^2.0.7",
     "axios": "^1.10.0",
     "dotenv": "^16.5.0",
+    "js-cookie": "^3.0.5",
     "jszip": "^3.10.1",
     "jwt-decode": "^4.0.0",
     "next": "^15.3.2",
@@ -29,13 +31,21 @@
   "devDependencies": {
     "@cloudflare/next-on-pages": "^1.13.8",
     "@eslint/eslintrc": "^3",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
+    "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.1.5",
+    "jest": "^30.0.3",
+    "jest-environment-jsdom": "^30.0.2",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
+    "ts-jest": "^29.4.0",
     "typescript": "^5"
   }
 }

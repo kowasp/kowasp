@@ -68,7 +68,7 @@ export default function ProjectDetailsPage() {
     return (
       <div className="text-center py-16">
         <h2 className="text-2xl font-bold text-black mb-2">Project not found</h2>
-        <p className="text-black">The project you're looking for doesn't exist.</p>
+        <p className="text-black">The project you&apos;re looking for doesn&apos;t exist.</p>
       </div>
     );
   }

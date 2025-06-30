@@ -68,6 +68,7 @@ describe('AuthService', () => {
         _id: 'user123',
         email: 'test@example.com',
         role: 'user',
+        passwordHash: 'hashedpassword',
         toObject: () => ({
           _id: 'user123',
           email: 'test@example.com',
@@ -76,8 +77,11 @@ describe('AuthService', () => {
         }),
       };
 
+      const mockToken = 'jwt-token';
+
       mockUsersService.findOneByEmail.mockResolvedValue(null);
       mockUsersService.create.mockResolvedValue(mockUser);
+      mockJwtService.sign.mockReturnValue(mockToken);
       (bcrypt.genSalt as jest.Mock).mockResolvedValue('salt');
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedpassword');
 
@@ -88,10 +92,14 @@ describe('AuthService', () => {
         email: 'test@example.com',
         passwordHash: 'hashedpassword',
       });
+      expect(jwtService.sign).toHaveBeenCalled();
       expect(result).toEqual({
-        _id: 'user123',
-        email: 'test@example.com',
-        role: 'user',
+        access_token: mockToken,
+        user: {
+          _id: 'user123',
+          email: 'test@example.com',
+          role: 'user',
+        },
       });
     });
 
@@ -121,6 +129,12 @@ describe('AuthService', () => {
         email: 'test@example.com',
         passwordHash: '$2b$10$hashedpassword',
         role: 'user',
+        toObject: () => ({
+          _id: 'user123',
+          email: 'test@example.com',
+          passwordHash: '$2b$10$hashedpassword',
+          role: 'user',
+        }),
       };
 
       const mockToken = 'jwt-token';
@@ -140,6 +154,11 @@ describe('AuthService', () => {
       });
       expect(result).toEqual({
         access_token: mockToken,
+        user: {
+          _id: 'user123',
+          email: 'test@example.com',
+          role: 'user',
+        },
       });
     });
 
@@ -175,6 +194,12 @@ describe('AuthService', () => {
         email: 'test@example.com',
         passwordHash: '$2b$10$hashedpassword',
         role: 'user',
+        toObject: () => ({
+          _id: 'user123',
+          email: 'test@example.com',
+          passwordHash: '$2b$10$hashedpassword',
+          role: 'user',
+        }),
       };
 
       mockUsersService.findOneByEmail.mockResolvedValue(mockUser);

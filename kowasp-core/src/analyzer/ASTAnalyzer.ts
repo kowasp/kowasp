@@ -1,303 +1,214 @@
-import * as esprima from 'esprima';
-import * as estraverse from 'estraverse';
-import * as escodegen from 'escodegen';
+import traverse from '@babel/traverse';
+import { parse, ParseResult } from '@babel/parser';
 import { ASTNode, XSSVulnerability, XSSPattern } from '../types/analyzer';
 import { xssPatterns } from '../patterns/xss-patterns';
+import { File } from '@babel/types';
 
 export class ASTAnalyzer {
     private vulnerabilities: XSSVulnerability[] = [];
+    private checkers: { [key: string]: (node: ASTNode, code: string) => boolean };
 
-    constructor(private filePath: string) {}
+    constructor(private filePath: string) {
+        this.checkers = {
+            'nosql-injection-1': this.isNoSQLInjectionNode.bind(this),
+            'dom-1': this.isDOMXSSNode.bind(this),
+            'dom-2': this.isUnsafeJSFunctionNode.bind(this),
+            'dom-3': this.isURLBasedXSSNode.bind(this),
+            'event-1': this.isEventHandlerNode.bind(this),
+            'file-upload-1': this.isFileUploadNode.bind(this),
+            'framework-1': this.isReactDangerouslySetInnerHTMLNode.bind(this),
+            'js-url-1': this.isJSURLNode.bind(this),
+            'reflected-1': this.isReflectedXSSNode.bind(this),
+            'stored-1': this.isStoredXSSNode.bind(this),
+        };
+    }
 
     public analyze(code: string): XSSVulnerability[] {
+        this.vulnerabilities = [];
         try {
-            // Try parsing as JSX first, fallback to regular JavaScript
-            let ast;
-            try {
-                ast = esprima.parseScript(code, { 
-                    loc: true, 
-                    jsx: true,
-                    tokens: true,
-                    comment: true
-                });
-            } catch (jsxError) {
-                // Fallback to regular JavaScript parsing
-                ast = esprima.parseScript(code, { 
-                    loc: true,
-                    tokens: true,
-                    comment: true
-                });
-            }
-            
-            console.log('AST parsed successfully for:', this.filePath);
-            this.traverseAST(ast as any);
-            console.log('Found vulnerabilities:', this.vulnerabilities.length);
-            return this.vulnerabilities;
+            const ast = parse(code, {
+                sourceType: 'module',
+                plugins: ['jsx', 'typescript'],
+                ranges: true,
+                tokens: true,
+            });
+            this.traverseAST(ast, code);
         } catch (error) {
             console.error(`Error analyzing file ${this.filePath}:`, error);
-            return [];
         }
+        return this.vulnerabilities;
     }
 
-    private traverseAST(ast: ASTNode): void {
-        try {
-            estraverse.traverse(ast as any, {
-                enter: (node: any) => {
-                    this.checkNode(node);
-                }
-            });
-        } catch (error) {
-            // If estraverse fails (e.g., with JSX), fall back to simple regex-based analysis
-            this.fallbackAnalysis(ast);
-        }
+    private traverseAST(ast: ParseResult<File>, code: string): void {
+        const visitor = {
+            enter: (path: any) => {
+                this.checkNode(path.node, code);
+            }
+        };
+        traverse(ast, visitor);
     }
 
-    private fallbackAnalysis(ast: ASTNode): void {
-        const code = this.getNodeCode(ast);
+    private checkNode(node: ASTNode, code: string): void {
         xssPatterns.forEach(pattern => {
-            if (new RegExp(pattern.pattern, 'i').test(code)) {
-                // Additional context checks for fallback analysis to reduce false positives
-                let shouldAdd = true;
-                
-                if (pattern.id === 'dom-2') {
-                    // For eval/setTimeout patterns, check if there's actual user input
-                    shouldAdd = /(?:userInput|req\.|document\.location|\$\{)/.test(code);
-                } else if (pattern.id === 'dom-3') {
-                    // For location-based XSS, check if location data is actually used
-                    shouldAdd = /(?:document\.)?location\.(?:hash|search|href|pathname)/.test(code) && 
-                               /(?:document\.write|\.innerHTML|\.outerHTML)/.test(code);
-                } else if (pattern.id === 'event-1') {
-                    // For event handlers, check if there's user input in the handler
-                    shouldAdd = /on(?:load|error|click|mouseover|focus|blur)\s*=/.test(code) && 
-                               /(?:userInput|\$\{|req\.)/.test(code);
-                } else if (pattern.id === 'framework-1') {
-                    // For React dangerouslySetInnerHTML, check for __html usage
-                    shouldAdd = /dangerouslySetInnerHTML\s*=\s*\{\s*\{\s*__html\s*:/.test(code);
-                } else if (pattern.id === 'reflected-1') {
-                    // For reflected XSS, check if there's actual user input and no sanitization
-                    shouldAdd = /(?:req\.(?:query|body|params)|\$\{)/.test(code) && 
-                               !/(?:xss\(|sanitize\(|DOMPurify\.sanitize\()/.test(code);
-                } else if (pattern.id === 'stored-1') {
-                    // For stored XSS, check if there's actual user input and no sanitization
-                    shouldAdd = /(?:userInput|req\.(?:query|body|params)|\$\{|getUserInput\()/.test(code) && 
-                               !/(?:xss\(|sanitize\(|DOMPurify\.sanitize\()/.test(code);
+            const specificChecker = this.checkers[pattern.id];
+            let isVulnerable = false;
+
+            if (specificChecker) {
+                if (specificChecker(node, code)) {
+                    isVulnerable = true;
                 }
-                
-                if (shouldAdd) {
-                    const vulnerability: XSSVulnerability = {
-                        type: pattern.category,
-                        severity: pattern.severity,
-                        location: {
-                            file: this.filePath,
-                            line: 1,
-                            column: 1
-                        },
-                        description: pattern.description,
-                        code: code.substring(0, 100) + '...',
-                        remediation: pattern.remediation,
-                        confidence: 0.6 // Lower confidence for fallback analysis
-                    };
-                    this.vulnerabilities.push(vulnerability);
+            } else {
+                const nodeCode = this.getNodeCode(node, code);
+                if (nodeCode && new RegExp(pattern.pattern, 'i').test(nodeCode)) {
+                    isVulnerable = true;
                 }
+            }
+
+            if (isVulnerable) {
+                this.addVulnerability(node, pattern, code);
             }
         });
     }
 
-    private checkNode(node: ASTNode): void {
-        xssPatterns.forEach(pattern => {
-            const nodeCode = this.getNodeCode(node);
-            if (new RegExp(pattern.pattern, 'i').test(nodeCode)) {
-                console.log(`Pattern ${pattern.id} matched for node:`, nodeCode.substring(0, 100));
-                // More specific checks for patterns to reduce false positives
-                if (pattern.id === 'nosql-injection-1') {
-                    if (this.isNoSQLInjectionNode(node)) {
-                        this.addVulnerability(node, pattern);
-                    }
-                } else if (pattern.id === 'dom-1') {
-                    if (this.isDOMXSSNode(node)) {
-                        this.addVulnerability(node, pattern);
-                    }
-                } else if (pattern.id === 'dom-2') {
-                    if (this.isUnsafeJSFunctionNode(node)) {
-                        this.addVulnerability(node, pattern);
-                    }
-                } else if (pattern.id === 'dom-3') {
-                    if (this.isURLBasedXSSNode(node)) {
-                        console.log('DOM-3 specific check passed');
-                        this.addVulnerability(node, pattern);
-                    } else {
-                        console.log('DOM-3 specific check failed');
-                    }
-                } else if (pattern.id === 'event-1') {
-                    if (this.isEventHandlerNode(node)) {
-                        this.addVulnerability(node, pattern);
-                    }
-                } else if (pattern.id === 'file-upload-1') {
-                    if (this.isFileUploadNode(node)) {
-                        this.addVulnerability(node, pattern);
-                    }
-                } else if (pattern.id === 'framework-1') {
-                    if (this.isReactDangerouslySetInnerHTMLNode(node)) {
-                        console.log('Framework-1 specific check passed');
-                        this.addVulnerability(node, pattern);
-                    } else {
-                        console.log('Framework-1 specific check failed');
-                    }
-                } else if (pattern.id === 'js-url-1') {
-                    if (this.isJSURLNode(node)) {
-                        this.addVulnerability(node, pattern);
-                    }
-                } else if (pattern.id === 'reflected-1') {
-                    if (this.isReflectedXSSNode(node)) {
-                        this.addVulnerability(node, pattern);
-                    }
-                } else if (pattern.id === 'stored-1') {
-                    if (this.isStoredXSSNode(node)) {
-                        console.log('Stored-1 specific check passed');
-                        this.addVulnerability(node, pattern);
-                    } else {
-                        console.log('Stored-1 specific check failed');
-                    }
-                } else {
-                    // For patterns without specific checks, use the regex match
-                    this.addVulnerability(node, pattern);
-                }
-            }
-        });
-    }
-
-    private isDOMXSSNode(node: ASTNode): boolean {
-        return node.type === 'AssignmentExpression' && 
-               node.left.type === 'MemberExpression' && 
-               /innerHTML|outerHTML/.test(this.getNodeCode(node.left));
-    }
-
-    private isUnsafeJSFunctionNode(node: ASTNode): boolean {
-        const nodeCode = this.getNodeCode(node);
-        // Check for eval, Function, setTimeout, setInterval with user input
-        const hasUnsafeFunction = /(?:eval|Function|setTimeout|setInterval)\s*\(/.test(nodeCode);
-        const hasUserInput = /(?:userInput|req\.|document\.location|\$\{)/.test(nodeCode);
-        return hasUnsafeFunction && hasUserInput;
-    }
-
-    private isURLBasedXSSNode(node: ASTNode): boolean {
-        const nodeCode = this.getNodeCode(node);
-        // Check for location-based data being written to DOM
-        const hasLocationData = /(?:document\.)?location\.(?:hash|search|href|pathname)/.test(nodeCode);
-        const hasDOMWrite = /(?:document\.write|\.innerHTML|\.outerHTML)/.test(nodeCode);
-        return hasLocationData && hasDOMWrite;
-    }
-
-    private isEventHandlerNode(node: ASTNode): boolean {
-        const nodeCode = this.getNodeCode(node);
-        // Check for inline event handlers with template literals or user input
-        const hasInlineHandler = /on(?:load|error|click|mouseover|focus|blur)\s*=/.test(nodeCode);
-        const hasUserInput = /(?:userInput|\$\{|req\.)/.test(nodeCode);
-        return hasInlineHandler && hasUserInput;
-    }
-
-    private isJSURLNode(node: ASTNode): boolean {
-        const nodeCode = this.getNodeCode(node);
-        // Check for javascript: URLs in href attributes
-        return /href\s*=\s*["']javascript:/.test(nodeCode);
-    }
-
-    private isFileUploadNode(node: ASTNode): boolean {
-        // Check for import declarations
-        if (node.type === 'ImportDeclaration') {
-            const source = node.source?.value;
-            return source === 'multer' || source === 'express-fileupload';
+    private getNodeCode(node: ASTNode, code: string): string {
+        if (node.range) {
+            return code.substring(node.range[0], node.range[1]);
         }
-
-        // Check for require calls
-        if (
-            node.type === 'CallExpression' &&
-            node.callee?.name === 'require' &&
-            node.arguments?.[0]?.type === 'Literal'
-        ) {
-            const source = node.arguments[0].value;
-            return source === 'multer' || source === 'express-fileupload';
-        }
-
-        return false;
+        return '';
     }
-
-    private isNoSQLInjectionNode(node: ASTNode): boolean {
-        if (node.type !== 'CallExpression') {
-            return false;
-        }
-
-        const callee = node.callee;
-        if (callee?.type !== 'MemberExpression') {
-            return false;
-        }
-
-        const propertyName = callee.property?.name;
-        const isDbMethod = ['find', 'findOne', 'findOneAndUpdate', 'updateOne', 'updateMany', 'deleteOne', 'deleteMany'].includes(propertyName);
-
-        if (!isDbMethod) {
-            return false;
-        }
-
-        // A simple heuristic: check if user input is passed directly.
-        const argument = node.arguments?.[0];
-        if (argument) {
-            const nodeCode = this.getNodeCode(argument);
-            return nodeCode.includes('req.query') || nodeCode.includes('req.body');
-        }
-
-        return false;
-    }
-
-    private isReactDangerouslySetInnerHTMLNode(node: ASTNode): boolean {
-        const nodeCode = this.getNodeCode(node);
-        // Check for dangerouslySetInnerHTML usage with __html
-        return /dangerouslySetInnerHTML\s*=\s*\{\s*\{\s*__html\s*:/.test(nodeCode);
-    }
-
-    private isReflectedXSSNode(node: ASTNode): boolean {
-        const nodeCode = this.getNodeCode(node);
-        // Check for response methods with user input, but exclude sanitized versions
-        const hasResponseMethod = /res\.(?:send|render|json|write)/.test(nodeCode);
-        const hasUserInput = /(?:req\.(?:query|body|params)|\$\{)/.test(nodeCode);
-        const isSanitized = /(?:xss\(|sanitize\(|DOMPurify\.sanitize\()/.test(nodeCode);
-        return hasResponseMethod && hasUserInput && !isSanitized;
-    }
-
-    private isStoredXSSNode(node: ASTNode): boolean {
-        const nodeCode = this.getNodeCode(node);
-        // Check for database operations with user input, including function calls and template literals
-        const hasDbOperation = /(?:db|database|collection)\.(?:insert|update|save)/.test(nodeCode);
-        const hasUserInput = /(?:userInput|req\.(?:query|body|params)|\$\{|getUserInput\()/.test(nodeCode);
-        const isSanitized = /(?:xss\(|sanitize\(|DOMPurify\.sanitize\()/.test(nodeCode);
-        return hasDbOperation && hasUserInput && !isSanitized;
-    }
-
-    private getNodeCode(node: ASTNode): string {
-        try {
-            return escodegen.generate(node);
-        } catch (e) {
-            return JSON.stringify(node);
-        }
-    }
-
-    private addVulnerability(node: ASTNode, pattern: XSSPattern): void {
-        if (!node.loc) return;
-
+    
+    private addVulnerability(node: ASTNode, pattern: XSSPattern, code: string): void {
         const vulnerability: XSSVulnerability = {
             type: pattern.category,
             severity: pattern.severity,
             location: {
                 file: this.filePath,
-                line: node.loc.start.line,
-                column: node.loc.start.column
+                line: node.loc ? node.loc.start.line : 0,
+                column: node.loc ? node.loc.start.column : 0
             },
             description: pattern.description,
-            code: this.getNodeCode(node),
+            code: this.getNodeCode(node, code),
             remediation: pattern.remediation,
-            confidence: 0.8 // This would be calculated based on context in a real implementation
+            confidence: 0.8
         };
-
         this.vulnerabilities.push(vulnerability);
+    }
+
+    // --- Specific Checkers ---
+
+    private isDOMXSSNode(node: ASTNode, code: string): boolean {
+        return node.type === 'AssignmentExpression' && 
+               node.left.type === 'MemberExpression' && 
+               /innerHTML|outerHTML/.test(this.getNodeCode(node.left, code));
+    }
+
+    private isUnsafeJSFunctionNode(node: ASTNode, code: string): boolean {
+        if (node.type !== 'CallExpression') {
+            return false;
+        }
+
+        if (node.callee.type !== 'Identifier' || !['eval', 'setTimeout', 'setInterval'].includes(node.callee.name)) {
+            return false;
+        }
+        
+        if (node.arguments.length === 0) {
+            return false;
+        }
+
+        const firstArg = node.arguments[0];
+
+        if (node.callee.name === 'eval') {
+            if (firstArg.type !== 'StringLiteral') {
+                const argCode = this.getNodeCode(firstArg, code);
+                const isSanitized = /(xss|sanitize)/i.test(argCode);
+                return !isSanitized;
+            }
+        }
+
+        if (node.callee.name === 'setTimeout' || node.callee.name === 'setInterval') {
+            if (firstArg.type !== 'ArrowFunctionExpression' && firstArg.type !== 'FunctionExpression') {
+                 const argCode = this.getNodeCode(firstArg, code);
+                 const hasUserInput = /(userInput|req\.|document\.location)/.test(argCode);
+                 const isSanitized = /(xss|sanitize)/i.test(code);
+                 return hasUserInput && !isSanitized;
+            }
+        }
+
+        return false;
+    }
+
+    private isURLBasedXSSNode(node: ASTNode, code: string): boolean {
+        const nodeCode = this.getNodeCode(node, code);
+        const hasDOMWrite = /(?:document\.write|\.innerHTML|\.outerHTML)/.test(nodeCode);
+        if (hasDOMWrite) {
+            const hasLocationData = /(?:document\.)?location\.(?:hash|search|href|pathname)/.test(code);
+            return hasLocationData;
+        }
+        return false;
+    }
+
+    private isEventHandlerNode(node: ASTNode, code: string): boolean {
+        const nodeCode = this.getNodeCode(node, code);
+        const hasInlineHandler = /on(?:load|error|click|mouseover|focus|blur)\s*=/.test(nodeCode);
+        const hasUserInput = /(?:userInput|\$\{|req\.)/.test(nodeCode);
+        return hasInlineHandler && hasUserInput;
+    }
+
+    private isJSURLNode(node: ASTNode, code: string): boolean {
+        const nodeCode = this.getNodeCode(node, code);
+        return /href\s*=\s*["']javascript:/.test(nodeCode);
+    }
+
+    private isFileUploadNode(node: ASTNode, code: string): boolean {
+        if (node.type === 'ImportDeclaration') return ['multer', 'express-fileupload'].includes(node.source.value);
+        if (node.type === 'CallExpression' &&
+            node.callee.type === 'Identifier' &&
+            node.callee.name === 'require' &&
+            node.arguments[0]?.type === 'StringLiteral') {
+            return ['multer', 'express-fileupload'].includes(node.arguments[0].value);
+        }
+        return false;
+    }
+
+    private isNoSQLInjectionNode(node: ASTNode, code: string): boolean {
+        if (node.type !== 'CallExpression' || node.callee?.type !== 'MemberExpression' || node.callee.property.type !== 'Identifier') return false;
+        const isDbMethod = ['find', 'findOne', 'findOneAndUpdate', 'updateOne', 'updateMany', 'deleteOne', 'deleteMany'].includes(node.callee.property.name);
+        if (!isDbMethod) return false;
+        const argument = node.arguments?.[0];
+        if (argument) {
+            const argCode = this.getNodeCode(argument, code);
+            return argCode.includes('req.query') || argCode.includes('req.body');
+        }
+        return false;
+    }
+
+    private isReactDangerouslySetInnerHTMLNode(node: ASTNode, code: string): boolean {
+        if (node.type === 'JSXAttribute' && node.name.type === 'JSXIdentifier' && node.name.name === 'dangerouslySetInnerHTML') {
+            const isSanitized = /(DOMPurify\.sanitize)/i.test(code);
+            return !isSanitized;
+        }
+        return false;
+    }
+
+    private isReflectedXSSNode(node: ASTNode, code: string): boolean {
+        const nodeCode = this.getNodeCode(node, code);
+        const hasResponseWrite = /res\.(send|write|render|json)/.test(nodeCode);
+        if (hasResponseWrite) {
+            const hasUserInput = /req\.(query|body|params)/.test(nodeCode);
+            const isSanitized = /(xss|sanitize)/i.test(code);
+            return hasUserInput && !isSanitized;
+        }
+        return false;
+    }
+
+    private isStoredXSSNode(node: ASTNode, code: string): boolean {
+        const nodeCode = this.getNodeCode(node, code);
+        const hasDbWrite = /\.(insert|update|save|create|findOneAndUpdate|updateOne|updateMany)\(/.test(nodeCode);
+        if (hasDbWrite) {
+            const hasUserInput = /(userInput|req\.(query|body|params)|getUserInput\()/i.test(code);
+            const isSanitized = /(xss|sanitize)/i.test(code);
+            return hasUserInput && !isSanitized;
+        }
+        return false;
     }
 } 

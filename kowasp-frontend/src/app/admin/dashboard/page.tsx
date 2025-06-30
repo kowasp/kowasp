@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../../lib/api';
 
 interface User {
@@ -27,6 +27,10 @@ interface Scan {
 }
 
 export default function AdminDashboardPage() {
+  const queryClient = useQueryClient();
+  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: () => apiClient.get('/admin/users').then(res => res.data),
@@ -41,6 +45,30 @@ export default function AdminDashboardPage() {
     queryKey: ['admin-scans'],
     queryFn: () => apiClient.get('/admin/scans').then(res => res.data),
   });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId: string) => apiClient.delete(`/admin/users/${userId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      setShowDeleteModal(false);
+      setDeleteUserId(null);
+    },
+    onError: (error) => {
+      console.error('Failed to delete user:', error);
+      alert('Failed to delete user. Please try again.');
+    },
+  });
+
+  const handleDeleteUser = (userId: string, userEmail: string) => {
+    setDeleteUserId(userId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteUserId) {
+      deleteUserMutation.mutate(deleteUserId);
+    }
+  };
 
   if (usersLoading || projectsLoading || scansLoading) {
     return (
@@ -91,6 +119,7 @@ export default function AdminDashboardPage() {
                   <th className="text-left py-3 px-4 font-semibold text-black">Email</th>
                   <th className="text-left py-3 px-4 font-semibold text-black">Role</th>
                   <th className="text-left py-3 px-4 font-semibold text-black">Joined</th>
+                  <th className="text-left py-3 px-4 font-semibold text-black">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -105,6 +134,15 @@ export default function AdminDashboardPage() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-black">{new Date(user.createdAt).toLocaleDateString()}</td>
+                    <td className="py-3 px-4">
+                      <button
+                        onClick={() => handleDeleteUser(user._id, user.email)}
+                        disabled={deleteUserMutation.isPending}
+                        className="px-3 py-1 bg-red-100 text-red-800 rounded-lg text-sm hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {deleteUserMutation.isPending ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -138,6 +176,36 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-black mb-4">Confirm Delete</h3>
+            <p className="text-black mb-6">
+              Are you sure you want to delete this user? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteUserId(null);
+                }}
+                className="px-4 py-2 text-black border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteUserMutation.isPending}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {deleteUserMutation.isPending ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

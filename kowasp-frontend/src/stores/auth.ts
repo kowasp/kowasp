@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import Cookies from 'js-cookie';
 
 interface User {
   _id: string;
@@ -21,8 +22,14 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       user: null,
       hydrated: false,
-      login: (token, user) => set({ token, user }),
-      logout: () => set({ token: null, user: null }),
+      login: (token, user) => {
+        Cookies.set('kowasp-auth', token, { path: '/' });
+        set({ token, user });
+      },
+      logout: () => {
+        Cookies.remove('kowasp-auth');
+        set({ token: null, user: null });
+      },
     }),
     {
       name: 'kowasp-auth',

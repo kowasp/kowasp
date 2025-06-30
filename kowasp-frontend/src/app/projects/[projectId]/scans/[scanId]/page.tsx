@@ -52,7 +52,44 @@ export default function ScanReportPage() {
     return (
       <div className="text-center py-16">
         <h2 className="text-2xl font-bold text-black mb-2">Scan not found</h2>
-        <p className="text-black">The scan report you're looking for doesn't exist.</p>
+        <p className="text-black">The scan report you&apos;re looking for doesn&apos;t exist.</p>
+      </div>
+    );
+  }
+
+  // Show spinner and message if scan is running
+  if (scan.status === 'running') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mb-6"></div>
+        <h2 className="text-2xl font-bold text-blue-700 mb-2">Scan in progress</h2>
+        <p className="text-black">Your repository is being analyzed. This may take a minute or two.<br/>Please wait...</p>
+      </div>
+    );
+  }
+
+  // Show error if scan failed
+  if (scan.status === 'failed') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+        <svg className="h-12 w-12 text-red-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
+        </svg>
+        <h2 className="text-2xl font-bold text-red-700 mb-2">Scan failed</h2>
+        <p className="text-black">There was an error running the scan. Please try again or check your repository URL.</p>
+      </div>
+    );
+  }
+
+  // Show message if scan completed and no findings
+  if (scan.status === 'completed' && (!scan.results?.findings || scan.results.findings.length === 0)) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+        <svg className="h-16 w-16 text-green-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h2 className="text-2xl font-bold text-green-700 mb-2">No vulnerabilities found!</h2>
+        <p className="text-black">Your code is looking good. No XSS vulnerabilities were detected in this scan. 🎉</p>
       </div>
     );
   }

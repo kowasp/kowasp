@@ -76,12 +76,13 @@ export default function NewProjectPage() {
           )}
           
           <div>
-            <label className="block text-sm font-medium text-black mb-2">
+            <label htmlFor="name" className="block text-sm font-medium text-black mb-2">
               Project Name
             </label>
             <input
               type="text"
               name="name"
+              id="name"
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
               placeholder="Enter project name"
@@ -91,12 +92,13 @@ export default function NewProjectPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-black mb-2">
+            <label htmlFor="repositoryUrl" className="block text-sm font-medium text-black mb-2">
               Repository URL
             </label>
             <input
               type="url"
               name="repositoryUrl"
+              id="repositoryUrl"
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
               placeholder="https://github.com/username/repo"

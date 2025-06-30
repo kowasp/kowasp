@@ -27,9 +27,16 @@ export class AuthService {
       passwordHash: hashedPassword,
     });
 
+    // Create JWT payload
+    const payload = { email: user.email, sub: user._id, role: user.role };
+    
     // Exclude password from the returned user object
-    const { passwordHash, ...result } = user.toObject();
-    return result;
+    const { passwordHash, ...userData } = user.toObject();
+    
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: userData,
+    };
   }
 
   async login(dto: LoginUserDto): Promise<any> {
@@ -45,8 +52,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     const payload = { email: user.email, sub: user._id, role: user.role };
+    
+    // Exclude password from the returned user object
+    const { passwordHash, ...userData } = user.toObject();
+    
     return {
       access_token: this.jwtService.sign(payload),
+      user: userData,
     };
   }
 } 

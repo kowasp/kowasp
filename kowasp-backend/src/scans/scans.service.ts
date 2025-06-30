@@ -47,8 +47,36 @@ export class ScansService {
       
       this.logger.log(`Analysis complete for scan ${scan._id}`);
 
+      // Transform results to match frontend expectations
+      const severityBreakdown = results.vulnerabilities.reduce((acc: any, vuln: any) => {
+        acc[vuln.severity] = (acc[vuln.severity] || 0) + 1;
+        return acc;
+      }, {});
+      
+      const findings = results.vulnerabilities.map((vuln: any) => ({
+        static: {
+          severity: vuln.severity,
+          rule: vuln.type,
+          description: vuln.description,
+          location: vuln.location,
+          code: vuln.code,
+          remediation: vuln.remediation,
+          context: `Confidence: ${vuln.confidence}`
+        }
+      }));
+
       scan.status = 'completed';
-      scan.results = results;
+      scan.results = {
+        summary: {
+          totalIssues: results.vulnerabilities.length,
+          severityBreakdown,
+          filesAnalyzed: results.vulnerabilities.length > 0 ? 1 : 0
+        },
+        findings,
+        recommendations: results.recommendations,
+        expressConfig: results.expressConfig,
+        missingSecurityHeaders: results.missingSecurityHeaders
+      };
       scan.completedAt = new Date();
       await scan.save();
       this.logger.log(`Scan ${scan._id} marked as completed and saved.`);
