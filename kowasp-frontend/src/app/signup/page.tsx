@@ -47,7 +47,7 @@ export default function SignupPage() {
       if (response.data.user.role === 'admin') {
         router.push("/admin/dashboard");
       } else {
-        router.push("/dashboard");
+      router.push("/dashboard");
       }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string };

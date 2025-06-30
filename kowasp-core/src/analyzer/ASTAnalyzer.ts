@@ -1,8 +1,7 @@
 import traverse from '@babel/traverse';
-import { parse, ParseResult } from '@babel/parser';
+import { parse } from '@babel/parser';
 import { ASTNode, XSSVulnerability, XSSPattern } from '../types/analyzer';
 import { xssPatterns } from '../patterns/xss-patterns';
-import { File } from '@babel/types';
 
 export class ASTAnalyzer {
     private vulnerabilities: XSSVulnerability[] = [];
@@ -32,20 +31,20 @@ export class ASTAnalyzer {
                 ranges: true,
                 tokens: true,
             });
-            this.traverseAST(ast, code);
+            this.traverseAST(ast.program as any, code);
         } catch (error) {
             console.error(`Error analyzing file ${this.filePath}:`, error);
         }
         return this.vulnerabilities;
     }
 
-    private traverseAST(ast: ParseResult<File>, code: string): void {
+    private traverseAST(ast: ASTNode, code: string): void {
         const visitor = {
             enter: (path: any) => {
                 this.checkNode(path.node, code);
             }
         };
-        traverse(ast, visitor);
+        traverse(ast as any, visitor);
     }
 
     private checkNode(node: ASTNode, code: string): void {
@@ -103,37 +102,13 @@ export class ASTAnalyzer {
     }
 
     private isUnsafeJSFunctionNode(node: ASTNode, code: string): boolean {
-        if (node.type !== 'CallExpression') {
-            return false;
+        const nodeCode = this.getNodeCode(node, code);
+        const hasUnsafeFunction = /(?:eval|Function|setTimeout|setInterval)\s*\(/.test(nodeCode);
+        if (hasUnsafeFunction) {
+            const hasUserInput = /(?:userInput|req\.|document\.location|\$\{)/.test(nodeCode);
+            const isSanitized = /(xss|sanitize)/i.test(code);
+            return hasUserInput && !isSanitized;
         }
-
-        if (node.callee.type !== 'Identifier' || !['eval', 'setTimeout', 'setInterval'].includes(node.callee.name)) {
-            return false;
-        }
-        
-        if (node.arguments.length === 0) {
-            return false;
-        }
-
-        const firstArg = node.arguments[0];
-
-        if (node.callee.name === 'eval') {
-            if (firstArg.type !== 'StringLiteral') {
-                const argCode = this.getNodeCode(firstArg, code);
-                const isSanitized = /(xss|sanitize)/i.test(argCode);
-                return !isSanitized;
-            }
-        }
-
-        if (node.callee.name === 'setTimeout' || node.callee.name === 'setInterval') {
-            if (firstArg.type !== 'ArrowFunctionExpression' && firstArg.type !== 'FunctionExpression') {
-                 const argCode = this.getNodeCode(firstArg, code);
-                 const hasUserInput = /(userInput|req\.|document\.location)/.test(argCode);
-                 const isSanitized = /(xss|sanitize)/i.test(code);
-                 return hasUserInput && !isSanitized;
-            }
-        }
-
         return false;
     }
 
@@ -160,19 +135,16 @@ export class ASTAnalyzer {
     }
 
     private isFileUploadNode(node: ASTNode, code: string): boolean {
-        if (node.type === 'ImportDeclaration') return ['multer', 'express-fileupload'].includes(node.source.value);
-        if (node.type === 'CallExpression' &&
-            node.callee.type === 'Identifier' &&
-            node.callee.name === 'require' &&
-            node.arguments[0]?.type === 'StringLiteral') {
+        if (node.type === 'ImportDeclaration') return ['multer', 'express-fileupload'].includes(node.source?.value);
+        if (node.type === 'CallExpression' && node.callee?.name === 'require' && node.arguments?.[0]?.type === 'Literal') {
             return ['multer', 'express-fileupload'].includes(node.arguments[0].value);
         }
         return false;
     }
 
     private isNoSQLInjectionNode(node: ASTNode, code: string): boolean {
-        if (node.type !== 'CallExpression' || node.callee?.type !== 'MemberExpression' || node.callee.property.type !== 'Identifier') return false;
-        const isDbMethod = ['find', 'findOne', 'findOneAndUpdate', 'updateOne', 'updateMany', 'deleteOne', 'deleteMany'].includes(node.callee.property.name);
+        if (node.type !== 'CallExpression' || node.callee?.type !== 'MemberExpression') return false;
+        const isDbMethod = ['find', 'findOne', 'findOneAndUpdate', 'updateOne', 'updateMany', 'deleteOne', 'deleteMany'].includes(node.callee.property?.name);
         if (!isDbMethod) return false;
         const argument = node.arguments?.[0];
         if (argument) {
@@ -183,7 +155,7 @@ export class ASTAnalyzer {
     }
 
     private isReactDangerouslySetInnerHTMLNode(node: ASTNode, code: string): boolean {
-        if (node.type === 'JSXAttribute' && node.name.type === 'JSXIdentifier' && node.name.name === 'dangerouslySetInnerHTML') {
+        if (node.type === 'JSXAttribute' && node.name.name === 'dangerouslySetInnerHTML') {
             const isSanitized = /(DOMPurify\.sanitize)/i.test(code);
             return !isSanitized;
         }
@@ -203,7 +175,7 @@ export class ASTAnalyzer {
 
     private isStoredXSSNode(node: ASTNode, code: string): boolean {
         const nodeCode = this.getNodeCode(node, code);
-        const hasDbWrite = /\.(insert|update|save|create|findOneAndUpdate|updateOne|updateMany)\(/.test(nodeCode);
+        const hasDbWrite = /(db|database|collection|model|schema)\.(insert|update|save|create|findOneAndUpdate|updateOne|updateMany)/i.test(nodeCode);
         if (hasDbWrite) {
             const hasUserInput = /(userInput|req\.(query|body|params)|getUserInput\()/i.test(code);
             const isSanitized = /(xss|sanitize)/i.test(code);
