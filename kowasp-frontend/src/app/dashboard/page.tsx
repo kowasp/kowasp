@@ -499,10 +499,118 @@ function ScanDirectoryModal({ open, onClose }: { open: boolean, onClose: () => v
         )}
 
         {result && (
-          <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-semibold text-black mb-4">Scan Results</h3>
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <pre className="text-sm overflow-x-auto text-black">{JSON.stringify(result, null, 2)}</pre>
+          <div className="space-y-6">
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Scan Results</h3>
+              
+              {/* Summary */}
+              {result.summary && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100 mb-6">
+                  <h4 className="font-semibold text-blue-900 mb-3">Summary</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">{result.summary.totalIssues}</div>
+                      <div className="text-sm text-blue-700">Total Issues</div>
+                    </div>
+                    {result.summary.filesAnalyzed !== undefined && (
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">{result.summary.filesAnalyzed}</div>
+                        <div className="text-sm text-blue-700">Files Analyzed</div>
+                      </div>
+                    )}
+                    {result.summary.severityBreakdown && (
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {Object.keys(result.summary.severityBreakdown).length}
+                        </div>
+                        <div className="text-sm text-blue-700">Severity Levels</div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {result.summary.severityBreakdown && (
+                    <div className="flex gap-3 mt-4">
+                      {Object.entries(result.summary.severityBreakdown).map(([sev, count]) => (
+                        <span 
+                          key={sev} 
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            sev === 'high' 
+                              ? 'bg-red-100 text-red-800' 
+                              : sev === 'medium' 
+                              ? 'bg-yellow-100 text-yellow-800' 
+                              : 'bg-green-100 text-green-800'
+                          }`}
+                        >
+                          {sev}: {count}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Findings */}
+              {result.findings && result.findings.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-black">Findings</h4>
+                  {result.findings.map((finding, idx) => (
+                    <div key={idx} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                      {/* Static fields */}
+                      {finding.static && (
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3">
+                            {finding.static.severity && (
+                              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                finding.static.severity === 'high' 
+                                  ? 'bg-red-100 text-red-800' 
+                                  : finding.static.severity === 'medium' 
+                                  ? 'bg-yellow-100 text-yellow-800' 
+                                  : 'bg-green-100 text-green-800'
+                              }`}>
+                                {finding.static.severity}
+                              </span>
+                            )}
+                            {finding.static.rule && (
+                              <h5 className="font-semibold text-black">{finding.static.rule}</h5>
+                            )}
+                          </div>
+                          
+                          {finding.static.description && (
+                            <p className="text-black">{finding.static.description}</p>
+                          )}
+                          
+                          {finding.static.location && (
+                            <div className="flex items-center gap-2 text-sm text-black">
+                              <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              {finding.static.location.file}:{finding.static.location.line}
+                            </div>
+                          )}
+                          
+                          {finding.static.context && (
+                            <div className="bg-white p-3 rounded border border-gray-200">
+                              <p className="text-sm text-black"><strong>Context:</strong> {finding.static.context}</p>
+                            </div>
+                          )}
+                          
+                          {finding.static.code && (
+                            <div className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
+                              <pre className="text-sm"><code>{finding.static.code}</code></pre>
+                            </div>
+                          )}
+                          
+                          {finding.static.remediation && (
+                            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                              <p className="text-sm text-blue-800"><strong>Remediation:</strong> {finding.static.remediation}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

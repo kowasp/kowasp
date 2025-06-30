@@ -1,5 +1,6 @@
 import traverse from '@babel/traverse';
 import { parse } from '@babel/parser';
+import * as path from 'path';
 import { ASTNode, XSSVulnerability, XSSPattern } from '../types/analyzer';
 import { xssPatterns } from '../patterns/xss-patterns';
 
@@ -31,9 +32,10 @@ export class ASTAnalyzer {
                 ranges: true,
                 tokens: true,
             });
-            this.traverseAST(ast.program as any, code);
-        } catch (error) {
+            this.traverseAST(ast as any, code);
+        } catch (error: any) {
             console.error(`Error analyzing file ${this.filePath}:`, error);
+            throw new Error(`Failed to parse the code. Please ensure it is valid JavaScript/JSX. Error: ${error.message}`);
         }
         return this.vulnerabilities;
     }
@@ -81,7 +83,7 @@ export class ASTAnalyzer {
             type: pattern.category,
             severity: pattern.severity,
             location: {
-                file: this.filePath,
+                file: path.basename(this.filePath),
                 line: node.loc ? node.loc.start.line : 0,
                 column: node.loc ? node.loc.start.column : 0
             },

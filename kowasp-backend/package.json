@@ -34,6 +34,7 @@
     "dotenv": "^16.5.0",
     "kowasp-core": "file:../kowasp-core",
     "mongoose": "^8.16.0",
+    "node-fetch": "^3.3.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.0",

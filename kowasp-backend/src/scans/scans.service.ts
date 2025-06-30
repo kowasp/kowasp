@@ -127,17 +127,20 @@ export class ScansService {
       return acc;
     }, {});
     
-    const findings = results.vulnerabilities.map((vuln: any) => ({
-      static: {
-        severity: vuln.severity,
-        rule: vuln.type,
-        description: vuln.description,
-        location: vuln.location,
-        code: vuln.code,
-        remediation: vuln.remediation,
-        context: `Confidence: ${vuln.confidence}`
+    const findings = results.vulnerabilities.map((vuln: any) => {
+      const friendlyLocation = { ...vuln.location, file: 'Uploaded Code Snippet' };
+      return {
+        static: {
+          severity: vuln.severity,
+          rule: vuln.type,
+          description: vuln.description,
+          location: friendlyLocation,
+          code: vuln.code,
+          remediation: vuln.remediation,
+          context: `Confidence: ${vuln.confidence}`
+        }
       }
-    }));
+    });
     
     return {
       summary: {
@@ -260,7 +263,7 @@ export class ScansService {
         missingSecurityHeaders: results.missingSecurityHeaders
       };
     } finally {
-      // Clean up temporary directory
+      this.logger.log(`Cleaning up directory ${tmpDir}`);
       await fs.remove(tmpDir);
     }
   }

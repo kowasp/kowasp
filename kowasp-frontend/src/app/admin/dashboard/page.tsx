@@ -112,7 +112,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <h2 className="text-xl font-semibold text-black mb-4">Recent Users</h2>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-64 overflow-y-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
@@ -123,7 +123,7 @@ export default function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {users?.slice(0, 5).map((user: User) => (
+                {users?.map((user: User) => (
                   <tr key={user._id} className="border-b border-gray-100">
                     <td className="py-3 px-4 text-black">{user.email}</td>
                     <td className="py-3 px-4">
@@ -152,7 +152,7 @@ export default function AdminDashboardPage() {
 
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <h2 className="text-xl font-semibold text-black mb-4">Recent Projects</h2>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-64 overflow-y-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
@@ -162,7 +162,7 @@ export default function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {projects?.slice(0, 5).map((project: Project) => (
+                {projects?.map((project: Project) => (
                   <tr key={project._id} className="border-b border-gray-100">
                     <td className="py-3 px-4 text-black">{project.name}</td>
                     <td className="py-3 px-4 text-sm text-black truncate max-w-xs">
