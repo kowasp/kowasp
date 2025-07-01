@@ -62,20 +62,24 @@ graph TD
 ### MongoDB with Docker
 
 ```sh
-docker-compose up -d mongo
+cd kowasp-backend && docker-compose up -d mongo
 ```
 
-- **Host:** `localhost`  **Port:** `27017`  **Username:** `root`  **Password:** `example`
-- Example connection: `mongodb://root:example@localhost:27017/`
+- For Docker's MongoDB instance, kowasp database has the following credentials:
+- **Host:** `localhost`  **Port:** `27017`  **Username:** `kowasp`  **Password:** `kowasp123`
+- Example connection: `mongodb://kowasp:kowasp123@localhost:27017/kowasp`
+- Note: Ensure the MONGO_URI in `.env` matches your MongoDB setup.
 
 ### Backend Setup
 
 ```bash
 cd kowasp-backend
 npm install
+tsx scripts/populate.ts # to populate the database
 # Create .env with:
 # MONGODB_URI=mongodb://localhost:27017/kowasp
 # JWT_SECRET=your-super-secret-jwt-key-here
+# Or copy .env.example to .env
 npm run start:dev
 # Backend: http://localhost:3001
 ```
