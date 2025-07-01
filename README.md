@@ -62,7 +62,7 @@ graph TD
 ### MongoDB with Docker
 
 ```sh
-docker compose up -d mongo
+docker-compose up -d mongo
 ```
 
 - **Host:** `localhost`  **Port:** `27017`  **Username:** `root`  **Password:** `example`
