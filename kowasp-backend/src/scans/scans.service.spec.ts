@@ -90,7 +90,19 @@ describe('ScansService', () => {
 
     // Mock XSSAnalyzer
     mockXSSAnalyzer = {
-      analyze: jest.fn(),
+      analyze: jest.fn().mockResolvedValue({
+        vulnerabilities: [],
+        recommendations: [],
+        expressConfig: {
+          helmet: false,
+          contentSecurityPolicy: false,
+          xssFilter: false,
+          noSniff: false,
+          frameguard: false,
+          hsts: false,
+        },
+        missingSecurityHeaders: [],
+      }),
     } as any;
     (XSSAnalyzer as jest.Mock).mockImplementation(() => mockXSSAnalyzer);
   });

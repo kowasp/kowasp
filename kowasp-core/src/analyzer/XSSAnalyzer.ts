@@ -13,59 +13,76 @@ export class XSSAnalyzer {
     constructor(private target: string) {}
 
     public async analyze(): Promise<AnalysisResult> {
-        const files = (await this.findExpressFiles()).slice(0, 50); // Limit to first 50 files for testing
-        console.log(`[XSSAnalyzer] Total files to analyze: ${files.length}`);
-        const vulnerabilities: XSSVulnerability[] = [];
-        let expressConfig = {
-            helmet: false,
-            contentSecurityPolicy: false,
-            xssFilter: false,
-            noSniff: false,
-            frameguard: false,
-            hsts: false
-        };
-        const missingHeaders: string[] = [];
-        const recommendations: string[] = [];
+        try {
+            const files = (await this.findExpressFiles()).slice(0, 50); // Limit to first 50 files for testing
+            console.log(`[XSSAnalyzer] Total files to analyze: ${files.length}`);
+            const vulnerabilities: XSSVulnerability[] = [];
+            let expressConfig = {
+                helmet: false,
+                contentSecurityPolicy: false,
+                xssFilter: false,
+                noSniff: false,
+                frameguard: false,
+                hsts: false
+            };
+            const missingHeaders: string[] = [];
+            const recommendations: string[] = [];
 
-        let fileIndex = 0;
-        for (const file of files) {
-            fileIndex++;
-            if (!fs.statSync(file).isFile()) continue;
-            const fileSize = fs.statSync(file).size;
-            if (fileSize > 1024 * 1024) { // 1MB
-                console.log(`[XSSAnalyzer] Skipping large file (${(fileSize/1024/1024).toFixed(2)} MB): ${file}`);
-                continue;
+            let fileIndex = 0;
+            for (const file of files) {
+                fileIndex++;
+                if (!fs.statSync(file).isFile()) continue;
+                const fileSize = fs.statSync(file).size;
+                if (fileSize > 1024 * 1024) { // 1MB
+                    console.log(`[XSSAnalyzer] Skipping large file (${(fileSize/1024/1024).toFixed(2)} MB): ${file}`);
+                    continue;
+                }
+                console.log(`[XSSAnalyzer] Analyzing file ${fileIndex}/${files.length}: ${file}`);
+                const code = fs.readFileSync(file, 'utf-8');
+                
+                // Analyze AST for XSS vulnerabilities
+                const astAnalyzer = new ASTAnalyzer(file);
+                const fileVulnerabilities = astAnalyzer.analyze(code);
+                vulnerabilities.push(...fileVulnerabilities);
+
+                // Analyze Express configuration
+                const configAnalyzer = new ExpressConfigAnalyzer(file);
+                const configResult = configAnalyzer.analyze(code);
+                
+                // Merge results
+                expressConfig = this.mergeConfigs(expressConfig, configResult.expressConfig);
+                missingHeaders.push(...configResult.missingSecurityHeaders);
+                recommendations.push(...configResult.recommendations);
+
+                // Note: Configuration issues are handled as recommendations, not as XSS vulnerabilities
+                // Missing headers and other config issues are addressed in the recommendations array
             }
-            console.log(`[XSSAnalyzer] Analyzing file ${fileIndex}/${files.length}: ${file}`);
-            const code = fs.readFileSync(file, 'utf-8');
-            
-            // Analyze AST for XSS vulnerabilities
-            const astAnalyzer = new ASTAnalyzer(file);
-            const fileVulnerabilities = astAnalyzer.analyze(code);
-            vulnerabilities.push(...fileVulnerabilities);
 
-            // Analyze Express configuration
-            const configAnalyzer = new ExpressConfigAnalyzer(file);
-            const configResult = configAnalyzer.analyze(code);
-            
-            // Merge results
-            expressConfig = this.mergeConfigs(expressConfig, configResult.expressConfig);
-            missingHeaders.push(...configResult.missingSecurityHeaders);
-            recommendations.push(...configResult.recommendations);
+            // Use Ollama for context-aware analysis
+            const enhancedVulnerabilities = await this.enhanceVulnerabilities(vulnerabilities);
 
-            // Note: Configuration issues are handled as recommendations, not as XSS vulnerabilities
-            // Missing headers and other config issues are addressed in the recommendations array
+            return {
+                vulnerabilities: enhancedVulnerabilities,
+                expressConfig,
+                missingSecurityHeaders: [...new Set(missingHeaders)],
+                recommendations: [...new Set(recommendations)]
+            };
+        } catch (e) {
+            console.error('[XSSAnalyzer] Error in analyze:', e);
+            return {
+                vulnerabilities: [],
+                expressConfig: {
+                    helmet: false,
+                    contentSecurityPolicy: false,
+                    xssFilter: false,
+                    noSniff: false,
+                    frameguard: false,
+                    hsts: false
+                },
+                missingSecurityHeaders: [],
+                recommendations: []
+            };
         }
-
-        // Use Ollama for context-aware analysis
-        const enhancedVulnerabilities = await this.enhanceVulnerabilities(vulnerabilities);
-
-        return {
-            vulnerabilities: enhancedVulnerabilities,
-            expressConfig,
-            missingSecurityHeaders: [...new Set(missingHeaders)],
-            recommendations: [...new Set(recommendations)]
-        };
     }
 
     private async findExpressFiles(): Promise<string[]> {

@@ -44,6 +44,13 @@ export class ScansService {
 
       const analyzer = new XSSAnalyzer(repoPath);
       const results = await analyzer.analyze();
+      if (!results || !Array.isArray(results.vulnerabilities)) {
+        this.logger.error(`Analyzer returned invalid results for scan ${scan._id}`);
+        scan.status = 'failed';
+        scan.completedAt = new Date();
+        await scan.save();
+        return;
+      }
       
       this.logger.log(`Analysis complete for scan ${scan._id}`);
 

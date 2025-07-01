@@ -7,6 +7,7 @@ import { xssPatterns } from '../patterns/xss-patterns';
 export class ASTAnalyzer {
     private vulnerabilities: XSSVulnerability[] = [];
     private checkers: { [key: string]: (node: ASTNode, code: string) => boolean };
+    private taintedVars: Set<string> = new Set();
 
     constructor(private filePath: string) {
         this.checkers = {
@@ -25,6 +26,7 @@ export class ASTAnalyzer {
 
     public analyze(code: string): XSSVulnerability[] {
         this.vulnerabilities = [];
+        this.taintedVars = new Set();
         try {
             const ast = parse(code, {
                 sourceType: 'unambiguous',
@@ -50,9 +52,11 @@ export class ASTAnalyzer {
     }
 
     private traverseAST(ast: ASTNode, code: string): void {
+        const analyzer = this;
         const visitor = {
             enter: (path: any) => {
-                this.checkNode(path.node, code);
+                analyzer.trackTaint(path.node, code);
+                analyzer.checkNode(path.node, code);
             }
         };
         traverse(ast as any, visitor);
@@ -107,6 +111,44 @@ export class ASTAnalyzer {
         this.vulnerabilities.push(vulnerability);
     }
 
+    // Track tainted variables (user input sources)
+    private trackTaint(node: ASTNode, code: string): void {
+        // Variable declaration: const foo = getUserInput();
+        if (node.type === 'VariableDeclarator' && node.id && node.init) {
+            const varName = node.id.name;
+            const initCode = this.getNodeCode(node.init, code);
+            if (/(getUserInput\(\)|req\.(body|query|params)|userInput|document\.location)/.test(initCode)) {
+                this.taintedVars.add(varName);
+            }
+            // Propagate taint through template literals
+            if (node.init.type === 'TemplateLiteral') {
+                for (const expr of node.init.expressions || []) {
+                    if (expr.type === 'Identifier' && this.taintedVars.has(expr.name)) {
+                        this.taintedVars.add(varName);
+                    }
+                }
+            }
+        }
+        // Assignment: foo = getUserInput();
+        if (node.type === 'AssignmentExpression' && node.left && node.right) {
+            if (node.left.type === 'Identifier') {
+                const varName = node.left.name;
+                const rightCode = this.getNodeCode(node.right, code);
+                if (/(getUserInput\(\)|req\.(body|query|params)|userInput|document\.location)/.test(rightCode)) {
+                    this.taintedVars.add(varName);
+                }
+                // Propagate taint through template literals
+                if (node.right.type === 'TemplateLiteral') {
+                    for (const expr of node.right.expressions || []) {
+                        if (expr.type === 'Identifier' && this.taintedVars.has(expr.name)) {
+                            this.taintedVars.add(varName);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // --- Specific Checkers ---
 
     private isDOMXSSNode(node: ASTNode, code: string): boolean {
@@ -116,12 +158,26 @@ export class ASTAnalyzer {
     }
 
     private isUnsafeJSFunctionNode(node: ASTNode, code: string): boolean {
-        const nodeCode = this.getNodeCode(node, code);
-        const hasUnsafeFunction = /(?:eval|Function|setTimeout|setInterval)\s*\(/.test(nodeCode);
-        if (hasUnsafeFunction) {
-            const hasUserInput = /(?:userInput|req\.|document\.location|\$\{)/.test(nodeCode);
-            const isSanitized = /(xss|sanitize)/i.test(code);
-            return hasUserInput && !isSanitized;
+        // Dangerous function call with tainted argument
+        if (node.type === 'CallExpression' && node.callee) {
+            const calleeName = node.callee.name || (node.callee.type === 'Identifier' && node.callee.name);
+            if (/^(eval|Function|setTimeout|setInterval)$/.test(calleeName)) {
+                // Check if any argument is tainted or contains tainted variables
+                for (const arg of node.arguments) {
+                    if (arg.type === 'Identifier' && this.taintedVars.has(arg.name)) {
+                        const isSanitized = /(xss|sanitize)/i.test(code);
+                        return !isSanitized;
+                    }
+                    if (arg.type === 'TemplateLiteral') {
+                        for (const expr of arg.expressions || []) {
+                            if (expr.type === 'Identifier' && this.taintedVars.has(expr.name)) {
+                                const isSanitized = /(xss|sanitize)/i.test(code);
+                                return !isSanitized;
+                            }
+                        }
+                    }
+                }
+            }
         }
         return false;
     }
@@ -188,12 +244,42 @@ export class ASTAnalyzer {
     }
 
     private isStoredXSSNode(node: ASTNode, code: string): boolean {
-        const nodeCode = this.getNodeCode(node, code);
-        const hasDbWrite = /(db|database|collection|model|schema)\.(insert|update|save|create|findOneAndUpdate|updateOne|updateMany)/i.test(nodeCode);
-        if (hasDbWrite) {
-            const hasUserInput = /(userInput|req\.(query|body|params)|getUserInput\()/i.test(code);
-            const isSanitized = /(xss|sanitize)/i.test(code);
-            return hasUserInput && !isSanitized;
+        // DB write with tainted argument
+        if (node.type === 'CallExpression' && node.callee && node.callee.type === 'MemberExpression') {
+            const method = node.callee.property && node.callee.property.name;
+            if (/^(insert|update|save|create|findOneAndUpdate|updateOne|updateMany)$/i.test(method)) {
+                // Check arguments for tainted variables
+                for (const arg of node.arguments) {
+                    if (arg.type === 'ObjectExpression') {
+                        for (const prop of arg.properties) {
+                            if (prop.value) {
+                                if (prop.value.type === 'Identifier' && this.taintedVars.has(prop.value.name)) {
+                                    const isSanitized = /(xss|sanitize)/i.test(code);
+                                    return !isSanitized;
+                                }
+                                if (prop.value.type === 'TemplateLiteral') {
+                                    for (const expr of prop.value.expressions || []) {
+                                        if (expr.type === 'Identifier' && this.taintedVars.has(expr.name)) {
+                                            const isSanitized = /(xss|sanitize)/i.test(code);
+                                            return !isSanitized;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else if (arg.type === 'Identifier' && this.taintedVars.has(arg.name)) {
+                        const isSanitized = /(xss|sanitize)/i.test(code);
+                        return !isSanitized;
+                    } else if (arg.type === 'TemplateLiteral') {
+                        for (const expr of arg.expressions || []) {
+                            if (expr.type === 'Identifier' && this.taintedVars.has(expr.name)) {
+                                const isSanitized = /(xss|sanitize)/i.test(code);
+                                return !isSanitized;
+                            }
+                        }
+                    }
+                }
+            }
         }
         return false;
     }

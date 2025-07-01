@@ -1,5 +1,5 @@
 export const vulnerable = `
-const userInput = "alert('xss')";
+const userInput = getUserInput();
 setTimeout(userInput, 100);
 eval(userInput);
 `;
