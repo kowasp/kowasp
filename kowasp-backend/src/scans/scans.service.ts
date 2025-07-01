@@ -267,4 +267,8 @@ export class ScansService {
       await fs.remove(tmpDir);
     }
   }
+
+  async deleteAllByProjectIds(projectIds: string[]): Promise<void> {
+    await this.scanModel.deleteMany({ projectId: { $in: projectIds } }).exec();
+  }
 } 

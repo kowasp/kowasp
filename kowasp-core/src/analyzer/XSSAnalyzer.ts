@@ -121,9 +121,31 @@ export class XSSAnalyzer {
         console.log(`[XSSAnalyzer] Sending ${vulnerabilities.length} vulnerabilities to LLM as a batch.`);
         try {
             const prompt = this.createBatchAnalysisPrompt(vulnerabilities);
-            const analyses = await this.queryOllama(prompt);
+            let analyses = await this.queryOllama(prompt);
+            // Robustly handle different LLM response formats
+            if (analyses && typeof analyses === 'object' && 'raw' in analyses && typeof analyses.raw === 'string') {
+                // Try to parse the raw string if possible
+                try {
+                    analyses = JSON.parse(analyses.raw);
+                } catch (e) {
+                    console.error('[XSSAnalyzer] Could not parse raw LLM response:', analyses.raw);
+                    return vulnerabilities;
+                }
+            }
+            if (typeof analyses === 'string') {
+                try {
+                    analyses = JSON.parse(analyses);
+                } catch (e) {
+                    console.error('[XSSAnalyzer] LLM returned a string that is not valid JSON:', analyses);
+                    return vulnerabilities;
+                }
+            }
+            if (analyses && !Array.isArray(analyses) && typeof analyses === 'object') {
+                // If it's a single object, wrap it in an array
+                analyses = [analyses];
+            }
             if (!Array.isArray(analyses)) {
-                console.error('[XSSAnalyzer] LLM did not return an array, skipping enhancement.');
+                console.error('[XSSAnalyzer] LLM did not return an array, skipping enhancement. Raw:', JSON.stringify(analyses));
                 return vulnerabilities;
             }
             console.log(`[XSSAnalyzer] Received LLM batch response for ${analyses.length} vulnerabilities.`);
@@ -184,10 +206,19 @@ Format the response as JSON with keys: description, remediation, confidence`;
             if (typeof data === 'object' && data !== null && 'response' in data && typeof (data as any).response === 'string') {
                 try {
                     // Remove control characters except for newlines and tabs
-                    const sanitized = (data as any).response.replace(/[\u0000-\u0019]+/g, '');
+                    const sanitized = (data as any).response.replace(/[^\x09\x0A\x0D\x20-\x7E]+/g, '');
+                    // Try to parse as JSON
                     return JSON.parse(sanitized);
                 } catch (e) {
+                    // If parsing fails, return the raw string for further handling
                     return { raw: (data as any).response, error: 'Invalid JSON from LLM' };
+                }
+            } else if (typeof data === 'string') {
+                // Sometimes the API might return a string directly
+                try {
+                    return JSON.parse(data);
+                } catch (e) {
+                    return { raw: data, error: 'Invalid JSON from LLM' };
                 }
             } else {
                 throw new Error('Unexpected response format from Ollama');

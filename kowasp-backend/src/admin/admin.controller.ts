@@ -23,8 +23,23 @@ export class AdminController {
 
   @Delete('users/:id')
   @Roles('admin')
-  deleteUser(@Param('id') id: string) {
-    return this.usersService.delete(id);
+  async deleteUser(@Param('id') id: string) {
+    // 1. Find all projects owned by the user
+    const projects = await this.projectsService['projectModel'].find({ ownerId: id }).exec();
+    const projectIds = projects.map((p: any) => p._id.toString());
+
+    // 2. Delete all scans for those projects
+    if (projectIds.length > 0) {
+      await this.scansService.deleteAllByProjectIds(projectIds);
+    }
+
+    // 3. Delete all projects owned by the user
+    await this.projectsService.deleteAllByOwnerId(id);
+
+    // 4. Delete the user
+    await this.usersService.delete(id);
+
+    return { message: 'User and all related projects and scans deleted.' };
   }
 
   @Get('projects')

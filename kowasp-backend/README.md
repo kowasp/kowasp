@@ -71,3 +71,42 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+## Using a Containerized MongoDB with Docker
+
+You can run MongoDB in a Docker container for local development. This is useful if you don't want to install MongoDB directly on your machine.
+
+### 1. Start MongoDB with Docker
+
+Run the following command in your terminal:
+
+```sh
+docker compose up -d mongo
+```
+
+This will start a MongoDB container in the background.
+
+### 2. Stop MongoDB
+
+To stop the MongoDB container, run:
+
+```sh
+docker compose down
+```
+
+### 3. Connection Details
+
+- **Host:** `localhost`
+- **Port:** `27017`
+- **Username:** `root`
+- **Password:** `example`
+
+You can update these credentials in the `docker-compose.yml` file if needed.
+
+### 4. Example Connection String
+
+```
+mongodb://root:example@localhost:27017/
+```
+
+---

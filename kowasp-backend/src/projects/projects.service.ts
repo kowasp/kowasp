@@ -47,4 +47,8 @@ export class ProjectsService {
   async findAll(): Promise<Project[]> {
     return this.projectModel.find().populate('ownerId', 'email').exec();
   }
+
+  async deleteAllByOwnerId(ownerId: string): Promise<void> {
+    await this.projectModel.deleteMany({ ownerId }).exec();
+  }
 } 
