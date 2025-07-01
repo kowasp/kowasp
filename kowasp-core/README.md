@@ -2,6 +2,37 @@
 
 A powerful XSS vulnerability analyzer for ExpressJS applications that combines AST-based code parsing, pattern matching, and AI-powered context-aware analysis.
 
+---
+
+## Quick Start: Run in Terminal
+
+1. **Install Prerequisites:**
+   - Node.js 16 or higher
+   - [Ollama](https://ollama.com/) with the Mistral model installed and running locally
+
+2. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Start Ollama with Mistral Model:**
+   ```bash
+   ollama run mistral
+   ```
+
+4. **Run the Analyzer on an Express App:**
+   - Using npm script:
+     ```bash
+     npm run analyze -- /path/to/your/express/app
+     ```
+   - Or, build and run directly:
+     ```bash
+     npm run build
+     node dist/index.js /path/to/your/express/app
+     ```
+
+---
+
 ## Features
 
 - AST-based code parsing using esprima and estraverse
@@ -37,18 +68,18 @@ ollama run mistral
 
 ## Usage
 
-Analyze an ExpressJS application:
+You can analyze an ExpressJS application directly from your terminal:
 
-```bash
-npm run analyze -- /path/to/your/express/app
-```
+- **Using npm script:**
+  ```bash
+  npm run analyze -- /path/to/your/express/app
+  ```
 
-Or build and run directly:
-
-```bash
-npm run build
-node dist/index.js /path/to/your/express/app
-```
+- **Or, build and run directly:**
+  ```bash
+  npm run build
+  node dist/index.js /path/to/your/express/app
+  ```
 
 ## Output
 

@@ -1,78 +1,98 @@
 # KOWASP Security Scanner
 
-A comprehensive web-based security scanner for Express.js applications that detects Cross-Site Scripting (XSS) vulnerabilities **and checks security configurations** using the OWASP XSS Prevention Cheat Sheet.
+A comprehensive security scanner for Express.js applications that detects Cross-Site Scripting (XSS) vulnerabilities and checks security configurations using the OWASP XSS Prevention Cheat Sheet. Supports project, file, and directory scanning, with advanced reporting and optional AI-powered analysis.
 
 ## Features
 
 - **User Authentication**: Secure login/signup with JWT tokens
 - **Project Management**: Create and manage projects with Git repository URLs
-- **Security Scanning**: Automated XSS vulnerability **and security config** detection using kowasp-core
-- **Detailed Reports**: View comprehensive scan results with remediation advice, Express config, and missing security headers
+- **Flexible Scanning**:
+  - **Project Scanning**: Analyze entire repositories
+  - **File Scanning**: Paste code into Monaco Editor for instant results
+  - **Directory Scanning**: Upload zipped or multi-file directories
+- **Automated XSS & Security Config Detection**: Uses kowasp-core engine for static and (optionally) LLM-powered analysis
+- **Detailed Reports**: Severity, location, code snippet, remediation, and confidence score
+- **Express Security Checks**: Detects missing/misconfigured middleware and headers
 - **Admin Dashboard**: Platform-wide statistics and user management
-- **Role-based Access**: Different permissions for users and administrators
+- **Role-based Access**: User and admin permissions
+- **Async Scanning Service**: Scans run in the background for large projects
 
 ## Architecture
 
-- **Frontend**: Next.js (15+) with TypeScript, Tailwind CSS, and React Query
-- **Backend**: NestJS (10+) with TypeScript, MongoDB, and JWT authentication
-- **Scanner**: Custom kowasp-core engine for XSS and security config detection (supports optional LLM-powered analysis)
-- **Database**: MongoDB for data persistence
+- **Frontend**: Next.js (TypeScript, Tailwind CSS, React Query)
+- **Backend**: NestJS (TypeScript, MongoDB, JWT)
+- **Core Engine**: Standalone CLI (kowasp-core) for static and AI-powered analysis
+- **Database**: MongoDB
+- **Async Scanning Service**: Background worker for queued scans
+
+```mermaid
+graph TD
+    subgraph "Browser"
+        Frontend[Next.js App]
+    end
+
+    subgraph "Server"
+        Backend[NestJS API]
+        ScanningService[Async Scanning Service]
+        Database[(MongoDB)]
+    end
+
+    subgraph "External"
+        CodeRepo[Git Repository]
+        CoreEngine[kowasp-core]
+    end
+
+    Frontend -- HTTP/S --> Backend
+    Backend -- interacts with --> Database
+    Backend -- triggers --> ScanningService
+    ScanningService -- clones from --> CodeRepo
+    ScanningService -- uses --> CoreEngine
+    ScanningService -- writes results to --> Database
+```
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js 18+ (backend), Node.js 16+ (core)
-- MongoDB instance
+- MongoDB instance (local or Docker)
 - Git
 - (Optional) [Ollama](https://ollama.com/) with Mistral model for LLM-powered analysis
 
+### MongoDB with Docker
+
+```sh
+docker compose up -d mongo
+```
+
+- **Host:** `localhost`  **Port:** `27017`  **Username:** `root`  **Password:** `example`
+- Example connection: `mongodb://root:example@localhost:27017/`
+
 ### Backend Setup
 
-1. Navigate to the backend directory:
-   ```bash
-   cd kowasp-backend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Create a `.env` file with the following variables:
-   ```
-   MONGODB_URI=mongodb://localhost:27017/kowasp
-   JWT_SECRET=your-super-secret-jwt-key-here
-   ```
-4. Start the development server:
-   ```bash
-   npm run start:dev
-   ```
-The backend will be available at `http://localhost:3001`
+```bash
+cd kowasp-backend
+npm install
+# Create .env with:
+# MONGODB_URI=mongodb://localhost:27017/kowasp
+# JWT_SECRET=your-super-secret-jwt-key-here
+npm run start:dev
+# Backend: http://localhost:3001
+```
 
 ### Frontend Setup
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd kowasp-frontend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-The frontend will be available at `http://localhost:3000`
+```bash
+cd kowasp-frontend
+npm install
+npm run dev
+# Frontend: http://localhost:3000
+```
 
 ### Core Engine (kowasp-core)
 
 The core scanning engine can be used standalone for CLI analysis or as part of the backend service.
 
-#### Prerequisites
-- Node.js 16+
-- (Optional) Ollama with Mistral model for LLM-powered context analysis
-
-#### Usage
 ```bash
 cd kowasp-core
 npm install
@@ -87,31 +107,42 @@ ollama run mistral
 
 ## Usage
 
-1. **Sign Up**: Create a new account at `http://localhost:3000/signup`
-2. **Login**: Access your dashboard at `http://localhost:3000/login`
+### Web Platform
+1. **Sign Up**: http://localhost:3000/signup
+2. **Login**: http://localhost:3000/login
 3. **Create Project**: Add a new project with a Git repository URL
-4. **Run Scan**: Trigger a security scan for your project
-5. **View Results**: Review detailed vulnerability reports, Express config, missing security headers, and remediation advice
+4. **Run Scan**: Trigger a scan for your project, upload a directory, or analyze a single file
+5. **View Results**: Review detailed vulnerability reports, Express config, missing headers, and remediation advice
+
+### CLI (kowasp-core)
+- Analyze any Express app or directory from the terminal (see above)
+
+### API
+- See [API Endpoints](#api-endpoints) below for programmatic access
 
 ## Scanning Features
 
-### Project Scanning
-- **Git Repository Scanning**: Connect your project to a Git repository and run automated scans
-- **Historical Results**: Track scan results over time with detailed reports
+- **Project Scanning**: Connect to a Git repository and scan the entire project
+- **File Scanning**: Paste code into Monaco Editor for instant analysis
+- **Directory Scanning**: Upload zipped or multi-file directories (structure preserved)
+- **Multiple File Types**: JavaScript, TypeScript, and web files
+- **Express Security Config Checks**: Detects missing/misconfigured middleware (helmet, CSP, HSTS, etc.)
+- **Missing Security Headers**: Reports on missing HTTP security headers
+- **LLM/AI Analysis**: (Optional) Context-aware analysis, false positive reduction, and custom remediation (requires Ollama)
+- **Async Scanning**: Large scans are queued and processed in the background
 
-### File Scanning
-- **Single File Analysis**: Paste code directly into the Monaco editor for instant analysis
-- **Real-time Results**: Get immediate feedback on potential vulnerabilities
+## Output & Reporting
 
-### Directory Scanning
-- **Directory Upload**: Upload entire directories with all files and subdirectories (supports both ZIP and multi-file upload)
-- **Zip File & Multi-file Support**: Upload compressed directories as ZIP files or upload multiple files preserving directory structure
-- **Preserved Structure**: Maintains original directory structure during analysis
-- **Multiple File Types**: Analyzes JavaScript, TypeScript, and other web files
-
-### Security Configuration Checks
-- **Express Security Config**: Detects missing or misconfigured security middleware (e.g., helmet, CSP, HSTS)
-- **Missing Security Headers**: Reports on missing recommended HTTP security headers
+- **Vulnerability Type** (reflected, stored, DOM-based, etc.)
+- **Severity**
+- **Location** (file and line number)
+- **Description**
+- **Code snippet**
+- **Remediation suggestion**
+- **Confidence score**
+- **Express Security Configuration**
+- **Missing Security Headers**
+- **Recommendations**
 
 ## API Endpoints
 
@@ -132,7 +163,7 @@ ollama run mistral
 - `GET /api/scans/:id` - Get scan results
 - `POST /api/scans/code` - Scan single file code
 - `POST /api/scans/upload-directory` - Scan uploaded ZIP directory
-- `POST /api/scans/upload-directory-files` - Scan uploaded directory files (multi-file upload, preserves structure)
+- `POST /api/scans/upload-directory-files` - Scan uploaded directory files (multi-file upload)
 
 ### Admin (Admin role required)
 - `GET /api/admin/users` - List all users
