@@ -3,17 +3,18 @@
 
 import {readFileSync} from "fs";
 import {Program} from "estree";
-import {parse} from 'yaml';
+// If you see a linter error here, run: npm install yaml
+import {parse as parseYaml} from 'yaml';
 import * as estraverse from "estraverse";
-import * as esprima from "esprima";
+import { parse } from "@babel/parser";
 
 // Step 1: Syntactic Analysis
 // Identify tokens
 // Determine its a script or a module
 //const vulCode: string = 'eval(alert("XSS"))';
 //const moduleExample: string = 'import { sqrt } from "math.js"';
-//console.log(esprima.parseScript(vulCode));
-//console.log(esprima.parseModule(moduleExample));
+//console.log(parse(vulCode, { sourceType: 'unambiguous', plugins: ['jsx', 'typescript', 'classProperties', 'optionalChaining', 'nullishCoalescingOperator', 'objectRestSpread', 'dynamicImport'], errorRecovery: true }));
+//console.log(parse(moduleExample, { sourceType: 'module', plugins: ['jsx', 'typescript', 'classProperties', 'optionalChaining', 'nullishCoalescingOperator', 'objectRestSpread', 'dynamicImport'], errorRecovery: true }));
 
 // Step 2: Lexical Analysis
 // Identify the meaning of each token
@@ -56,7 +57,7 @@ import * as esprima from "esprima";
   const filePaths = ["./xss/xss_node.yaml","./xss/xss_mustache_escape.yaml","./xss/xss_serialize_js.yaml","./xss/xss_templates.yaml" ]
   const rules = filePaths.map((filePath) => {
     const fileContent = readFileSync(filePath, 'utf-8');
-    return parse(fileContent).rules[0];
+    return parseYaml(fileContent).rules[0];
   });
   console.log(rules);
 

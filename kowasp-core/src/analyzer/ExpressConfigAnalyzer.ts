@@ -1,6 +1,6 @@
 import { ExpressConfig, AnalysisResult } from '../types/analyzer';
-import * as esprima from 'esprima';
-import * as estraverse from 'estraverse';
+import { parse } from '@babel/parser';
+import traverse from '@babel/traverse';
 import { ASTNode } from '../types/analyzer';
 import fetch from 'node-fetch';
 
@@ -32,8 +32,23 @@ export class ExpressConfigAnalyzer {
 
     public analyze(code: string): AnalysisResult {
         try {
-            const ast = esprima.parseScript(code, { loc: true });
-            this.traverseAST(ast as any);
+            const ast = parse(code, {
+                sourceType: 'unambiguous',
+                plugins: [
+                    'jsx',
+                    'typescript',
+                    'classProperties',
+                    'optionalChaining',
+                    'nullishCoalescingOperator',
+                    'objectRestSpread',
+                    'dynamicImport',
+                ],
+                ranges: true,
+                tokens: true,
+                errorRecovery: true,
+            });
+            // Babel traverse expects the full AST (type 'File')
+            this.traverseAST(ast);
             this.generateRecommendations();
             return {
                 vulnerabilities: [], // This will be populated by the main analyzer
@@ -52,10 +67,10 @@ export class ExpressConfigAnalyzer {
         }
     }
 
-    private traverseAST(ast: ASTNode): void {
-        estraverse.traverse(ast as any, {
-            enter: (node: any) => {
-                this.checkNode(node);
+    private traverseAST(ast: any): void {
+        traverse(ast, {
+            enter: (path: any) => {
+                this.checkNode(path.node);
             }
         });
     }

@@ -27,10 +27,19 @@ export class ASTAnalyzer {
         this.vulnerabilities = [];
         try {
             const ast = parse(code, {
-                sourceType: 'module',
-                plugins: ['jsx', 'typescript'],
+                sourceType: 'unambiguous',
+                plugins: [
+                    'jsx',
+                    'typescript',
+                    'classProperties',
+                    'optionalChaining',
+                    'nullishCoalescingOperator',
+                    'objectRestSpread',
+                    'dynamicImport',
+                ],
                 ranges: true,
                 tokens: true,
+                errorRecovery: true,
             });
             this.traverseAST(ast as any, code);
         } catch (error: any) {
@@ -74,6 +83,9 @@ export class ASTAnalyzer {
     private getNodeCode(node: ASTNode, code: string): string {
         if (node.range) {
             return code.substring(node.range[0], node.range[1]);
+        }
+        if (typeof node.start === 'number' && typeof node.end === 'number') {
+            return code.substring(node.start, node.end);
         }
         return '';
     }

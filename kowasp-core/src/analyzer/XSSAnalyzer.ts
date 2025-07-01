@@ -13,7 +13,8 @@ export class XSSAnalyzer {
     constructor(private target: string) {}
 
     public async analyze(): Promise<AnalysisResult> {
-        const files = await this.findExpressFiles();
+        const files = (await this.findExpressFiles()).slice(0, 50); // Limit to first 50 files for testing
+        console.log(`[XSSAnalyzer] Total files to analyze: ${files.length}`);
         const vulnerabilities: XSSVulnerability[] = [];
         let expressConfig = {
             helmet: false,
@@ -26,8 +27,16 @@ export class XSSAnalyzer {
         const missingHeaders: string[] = [];
         const recommendations: string[] = [];
 
+        let fileIndex = 0;
         for (const file of files) {
+            fileIndex++;
             if (!fs.statSync(file).isFile()) continue;
+            const fileSize = fs.statSync(file).size;
+            if (fileSize > 1024 * 1024) { // 1MB
+                console.log(`[XSSAnalyzer] Skipping large file (${(fileSize/1024/1024).toFixed(2)} MB): ${file}`);
+                continue;
+            }
+            console.log(`[XSSAnalyzer] Analyzing file ${fileIndex}/${files.length}: ${file}`);
             const code = fs.readFileSync(file, 'utf-8');
             
             // Analyze AST for XSS vulnerabilities
@@ -70,7 +79,28 @@ export class XSSAnalyzer {
             '**/*.jsx'
         ];
         const files = await Promise.all(
-            patterns.map(pattern => glob(pattern, { cwd: this.target, ignore: ['node_modules/**', 'dist/**', 'test/**'] }))
+            patterns.map(pattern => glob(pattern, {
+                cwd: this.target,
+                ignore: [
+                    'node_modules/**',
+                    'dist/**',
+                    'test/**',
+                    'coverage/**',
+                    'docs/**',
+                    'public/**',
+                    'examples/**',
+                    '**/*.min.js',
+                    'scripts/**',
+                    'benchmark/**',
+                    'mocks/**',
+                    'tmp/**',
+                    'build/**',
+                    'out/**',
+                    'vendor/**',
+                    '__tests__/**',
+                    '__mocks__/**',
+                ]
+            }))
         );
         return files.flat().map(file => path.join(this.target, file));
     }
@@ -87,27 +117,34 @@ export class XSSAnalyzer {
     }
 
     private async enhanceVulnerabilities(vulnerabilities: XSSVulnerability[]): Promise<XSSVulnerability[]> {
-        const enhancedVulnerabilities: XSSVulnerability[] = [];
-
-        for (const vuln of vulnerabilities) {
-            try {
-                const prompt = this.createAnalysisPrompt(vuln);
-                const analysis = await this.queryOllama(prompt);
-                
-                // Update vulnerability with enhanced analysis
-                enhancedVulnerabilities.push({
+        if (vulnerabilities.length === 0) return [];
+        console.log(`[XSSAnalyzer] Sending ${vulnerabilities.length} vulnerabilities to LLM as a batch.`);
+        try {
+            const prompt = this.createBatchAnalysisPrompt(vulnerabilities);
+            const analyses = await this.queryOllama(prompt);
+            if (!Array.isArray(analyses)) {
+                console.error('[XSSAnalyzer] LLM did not return an array, skipping enhancement.');
+                return vulnerabilities;
+            }
+            console.log(`[XSSAnalyzer] Received LLM batch response for ${analyses.length} vulnerabilities.`);
+            return vulnerabilities.map((vuln, i) => {
+                const analysis = analyses[i] || {};
+                return {
                     ...vuln,
                     description: analysis.description || vuln.description,
                     remediation: analysis.remediation || vuln.remediation,
                     confidence: analysis.confidence || vuln.confidence
-                });
-            } catch (error) {
-                console.error('Error enhancing vulnerability:', error);
-                enhancedVulnerabilities.push(vuln);
-            }
+                };
+            });
+        } catch (error) {
+            console.error('[XSSAnalyzer] Error enhancing vulnerabilities with LLM batch:', error);
+            return vulnerabilities;
         }
+    }
 
-        return enhancedVulnerabilities;
+    private createBatchAnalysisPrompt(vulnerabilities: XSSVulnerability[]): string {
+        const items = vulnerabilities.map((vuln, i) => `#${i+1}\nType: ${vuln.type}\nSeverity: ${vuln.severity}\nLocation: ${vuln.location.file}:${vuln.location.line}\nCode: ${vuln.code}\n`).join('\n');
+        return `Analyze the following list of XSS vulnerabilities and provide context-aware analysis for each.\n\nFor each item, return a JSON array of objects with keys: description, remediation, confidence.\n\nVulnerabilities:\n${items}\n\nFormat the response as a JSON array, in the same order as the input.`;
     }
 
     private createAnalysisPrompt(vulnerability: XSSVulnerability): string {
