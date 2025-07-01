@@ -11,7 +11,7 @@
     "start": "node dist/index.js",
     "test": "jest",
     "lint": "eslint . --ext .ts",
-    "analyze": "ts-node src/index.ts"
+    "analyze": "ts-node src/cli.ts"
   },
   "author": "",
   "license": "ISC",
