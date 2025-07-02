@@ -12,7 +12,8 @@
     "test": "jest",
     "lint": "eslint . --ext .ts",
     "analyze": "ts-node src/cli.ts",
-    "accuracy-test": "ts-node test/accuracy/accuracy-test.ts"
+    "accuracy-test": "ts-node test/accuracy/accuracy-test.ts",
+    "accuracy-test-llm": "ts-node test/accuracy/accuracy-test-with-llm.ts"
   },
   "author": "",
   "license": "ISC",

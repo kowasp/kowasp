@@ -1,13 +1,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { XSSAnalyzer } from '../../src/analyzer/XSSAnalyzer';
-import { AnalysisResult } from '../../src/types/analyzer';
+import { ASTAnalyzer } from '../../src/analyzer/ASTAnalyzer';
+import { XSSVulnerability } from '../../src/types/analyzer';
 
 interface TestResult {
     payload: string;
     context: string;
     detected: boolean;
-    vulnerabilities: any[];
+    vulnerabilities: XSSVulnerability[];
     lineNumber: number;
 }
 
@@ -16,21 +16,37 @@ const payloadList = fs.readFileSync(path.join(__dirname, './xss-payload-list'), 
     .split('\n')
     .slice(7) // Skip first 7 lines (header comments)
     .filter(line => line.trim() !== '' && !line.startsWith('<!--')) // Remove empty lines and comments
-    .map(line => line.trim());
+    .map(line => line.trim())
+    .map(payload => {
+        // URL decode the payload to handle encoded characters
+        try {
+            return decodeURIComponent(payload);
+        } catch (e) {
+            // If URL decoding fails, return original payload
+            return payload;
+        }
+    })
+    .filter(payload => {
+        // Filter out payloads that would create invalid JavaScript
+        const testCode = `const userInput = "${payload}";`;
+        try {
+            // Try to parse as JavaScript to see if it's valid
+            require('@babel/parser').parse(testCode, {
+                sourceType: 'module',
+                plugins: ['jsx', 'typescript']
+            });
+            return true;
+        } catch (e) {
+            // Skip payloads that would cause parser errors
+            return false;
+        }
+    });
 
-console.log(`Loaded ${payloadList.length} XSS payloads for testing\n`);
+console.log(`Loaded ${payloadList.length} XSS payloads for testing (filtered for valid syntax)\n`);
 
 // Create different test contexts for each payload
 const createTestContexts = (payload: string): { context: string; code: string }[] => {
     return [
-        {
-            context: 'Direct HTML Injection',
-            code: `<!DOCTYPE html><html><body><div>${payload}</div></body></html>`
-        },
-        {
-            context: 'HTML Attribute Injection',
-            code: `<!DOCTYPE html><html><body><div title="${payload}">Test</div></body></html>`
-        },
         {
             context: 'JavaScript String Injection',
             code: `const userInput = "${payload}";\neval(userInput);`
@@ -38,10 +54,6 @@ const createTestContexts = (payload: string): { context: string; code: string }[
         {
             context: 'DOM innerHTML Injection',
             code: `const userInput = "${payload}";\ndocument.getElementById('test').innerHTML = userInput;`
-        },
-        {
-            context: 'Event Handler Injection',
-            code: `const userInput = "${payload}";\ndocument.getElementById('test').onclick = userInput;`
         },
         {
             context: 'setTimeout Injection',
@@ -54,6 +66,18 @@ const createTestContexts = (payload: string): { context: string; code: string }[
         {
             context: 'Template Literal Injection',
             code: `const userInput = "${payload}";\nconst message = \`Hello \${userInput}\`;\nelement.innerHTML = message;`
+        },
+        {
+            context: 'HTML Attribute Injection',
+            code: `const userInput = "${payload}";\ndocument.getElementById('test').setAttribute('title', userInput);`
+        },
+        {
+            context: 'Event Handler Injection',
+            code: `const userInput = "${payload}";\ndocument.getElementById('test').onclick = userInput;`
+        },
+        {
+            context: 'Response Write Injection',
+            code: `const userInput = "${payload}";\nres.send(userInput);`
         }
     ];
 };
@@ -83,7 +107,7 @@ async function runAccuracyTest(): Promise<void> {
     let totalTests = 0;
     let totalDetected = 0;
 
-    console.log('Starting XSS Payload Accuracy Test\n');
+    console.log('Starting XSS Payload Accuracy Test (AST Analysis Only)\n');
     console.log('='.repeat(80));
 
     for (let i = 0; i < payloadList.length; i++) {
@@ -98,10 +122,11 @@ async function runAccuracyTest(): Promise<void> {
             const filePath = createTempFile(code, totalTests);
             
             try {
-                const analyzer = new XSSAnalyzer(filePath);
-                const result: AnalysisResult = await analyzer.analyze();
+                // Use ASTAnalyzer directly (no LLM enhancement)
+                const analyzer = new ASTAnalyzer(filePath);
+                const vulnerabilities: XSSVulnerability[] = analyzer.analyze(code);
                 
-                const detected = result.vulnerabilities.length > 0;
+                const detected = vulnerabilities.length > 0;
                 totalDetected += detected ? 1 : 0;
                 totalTests++;
                 
@@ -109,17 +134,24 @@ async function runAccuracyTest(): Promise<void> {
                     payload,
                     context,
                     detected,
-                    vulnerabilities: result.vulnerabilities,
+                    vulnerabilities,
                     lineNumber: i + 1
                 });
                 
                 // Clean up temp file
                 fs.unlinkSync(filePath);
                 
-                console.log(`  ${context}: ${detected ? '✅ DETECTED' : '❌ MISSED'} (${result.vulnerabilities.length} vulnerabilities)`);
+                console.log(`  ${context}: ${detected ? '✅ DETECTED' : '❌ MISSED'} (${vulnerabilities.length} vulnerabilities)`);
+                
+                // Show vulnerability details for detected cases
+                if (detected) {
+                    vulnerabilities.forEach((vuln, idx) => {
+                        console.log(`    - ${vuln.type} XSS (${vuln.severity}): ${vuln.description}`);
+                    });
+                }
                 
             } catch (error) {
-                console.log(`  ${context}: ❌ ERROR - ${error.message}`);
+                console.log(`  ${context}: ❌ ERROR - ${error instanceof Error ? error.message : String(error)}`);
                 totalTests++;
                 results.push({
                     payload,
@@ -139,7 +171,7 @@ async function runAccuracyTest(): Promise<void> {
 
     // Generate detailed report
     console.log('\n' + '='.repeat(80));
-    console.log('ACCURACY TEST RESULTS');
+    console.log('ACCURACY TEST RESULTS (AST Analysis Only)');
     console.log('='.repeat(80));
     
     console.log(`\n📊 SUMMARY:`);
@@ -158,6 +190,18 @@ async function runAccuracyTest(): Promise<void> {
         const total = contextResults.length;
         const rate = total > 0 ? ((detected / total) * 100).toFixed(2) : '0.00';
         console.log(`${context}: ${detected}/${total} (${rate}%)`);
+    });
+    
+    // Vulnerability type breakdown
+    const allVulnerabilities = results.flatMap(r => r.vulnerabilities);
+    const typeBreakdown = allVulnerabilities.reduce((acc, vuln) => {
+        acc[vuln.type] = (acc[vuln.type] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+    
+    console.log(`\n🔍 VULNERABILITY TYPE BREAKDOWN:`);
+    Object.entries(typeBreakdown).forEach(([type, count]) => {
+        console.log(`${type}: ${count}`);
     });
     
     // Show missed payloads
@@ -180,24 +224,26 @@ async function runAccuracyTest(): Promise<void> {
         detectedPayloads.slice(0, 5).forEach((result, index) => {
             console.log(`${index + 1}. Line ${result.lineNumber}: ${result.payload.substring(0, 80)}...`);
             console.log(`   Context: ${result.context}`);
-            console.log(`   Vulnerabilities: ${result.vulnerabilities.map(v => v.type).join(', ')}`);
+            console.log(`   Vulnerabilities: ${result.vulnerabilities.map(v => `${v.type}(${v.severity})`).join(', ')}`);
         });
     }
     
     // Save detailed results to file
-    const reportPath = path.join(__dirname, 'accuracy-report.json');
+    const reportPath = path.join(__dirname, 'accuracy-report-ast-only.json');
     fs.writeFileSync(reportPath, JSON.stringify({
         summary: {
             totalPayloads: payloadList.length,
             totalTests,
             detected: totalDetected,
             missed: totalTests - totalDetected,
-            detectionRate: (totalDetected / totalTests) * 100
+            detectionRate: (totalDetected / totalTests) * 100,
+            vulnerabilityTypes: typeBreakdown
         },
         results
     }, null, 2));
     
     console.log(`\n📄 Detailed report saved to: ${reportPath}`);
+    console.log(`\n💡 Note: This test uses AST analysis only. For LLM-enhanced results, use XSSAnalyzer.`);
     
     // Cleanup
     cleanupTempFiles();

@@ -1,0 +1,1682 @@
+{
+  "summary": {
+    "totalPayloads": 10,
+    "totalTests": 50,
+    "detected": 35,
+    "missed": 15,
+    "llmEnhanced": 95,
+    "detectionRate": 70
+  },
+  "results": [
+    {
+      "payload": "\"-prompt(8)-\"",
+      "context": "JavaScript String Injection",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 1,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "\"-prompt(8)-\"",
+      "context": "DOM innerHTML Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-1.js",
+            "line": 2,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "document.getElementById('test').innerHTML = userInput",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 1,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "\"-prompt(8)-\"",
+      "context": "setTimeout Injection",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 1,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "\"-prompt(8)-\"",
+      "context": "Database Storage",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 1,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "\"-prompt(8)-\"",
+      "context": "Template Literal Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-4.js",
+            "line": 3,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "element.innerHTML = message",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 1,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "'-prompt(8)-'",
+      "context": "JavaScript String Injection",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 2,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "'-prompt(8)-'",
+      "context": "DOM innerHTML Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-6.js",
+            "line": 2,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "document.getElementById('test').innerHTML = userInput",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 2,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "'-prompt(8)-'",
+      "context": "setTimeout Injection",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 2,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "'-prompt(8)-'",
+      "context": "Database Storage",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 2,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "'-prompt(8)-'",
+      "context": "Template Literal Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-9.js",
+            "line": 3,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "element.innerHTML = message",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 2,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "\";a=prompt,a()//",
+      "context": "JavaScript String Injection",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 3,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "\";a=prompt,a()//",
+      "context": "DOM innerHTML Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-11.js",
+            "line": 2,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "document.getElementById('test').innerHTML = userInput",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 3,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "\";a=prompt,a()//",
+      "context": "setTimeout Injection",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 3,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "\";a=prompt,a()//",
+      "context": "Database Storage",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 3,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "\";a=prompt,a()//",
+      "context": "Template Literal Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-14.js",
+            "line": 3,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "element.innerHTML = message",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 3,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "';a=prompt,a()//",
+      "context": "JavaScript String Injection",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 4,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "';a=prompt,a()//",
+      "context": "DOM innerHTML Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-16.js",
+            "line": 2,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "document.getElementById('test').innerHTML = userInput",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 4,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "';a=prompt,a()//",
+      "context": "setTimeout Injection",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 4,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "';a=prompt,a()//",
+      "context": "Database Storage",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 4,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "';a=prompt,a()//",
+      "context": "Template Literal Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-19.js",
+            "line": 3,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "element.innerHTML = message",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 4,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "\"-eval(\"window['pro'+'mpt'](8)\")-\"",
+      "context": "JavaScript String Injection",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 5,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "\"-eval(\"window['pro'+'mpt'](8)\")-\"",
+      "context": "DOM innerHTML Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-21.js",
+            "line": 2,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "document.getElementById('test').innerHTML = userInput",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 5,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "\"-eval(\"window['pro'+'mpt'](8)\")-\"",
+      "context": "setTimeout Injection",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 5,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "\"-eval(\"window['pro'+'mpt'](8)\")-\"",
+      "context": "Database Storage",
+      "detected": false,
+      "vulnerabilities": [],
+      "lineNumber": 5,
+      "hasLLMEnhancement": false
+    },
+    {
+      "payload": "\"-eval(\"window['pro'+'mpt'](8)\")-\"",
+      "context": "Template Literal Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-24.js",
+            "line": 3,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "element.innerHTML = message",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 5,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image/src/onerror=prompt(8)>",
+      "context": "JavaScript String Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-25.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image/src/onerror=prompt(8)>\";\neval(userInput);",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-25.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image/src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-25.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image/src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 6,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image/src/onerror=prompt(8)>",
+      "context": "DOM innerHTML Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-26.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image/src/onerror=prompt(8)>\";\ndocument.getElementById('test').innerHTML = userInput;",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-26.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image/src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-26.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image/src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-26.js",
+            "line": 2,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "document.getElementById('test').innerHTML = userInput",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 6,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image/src/onerror=prompt(8)>",
+      "context": "setTimeout Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-27.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image/src/onerror=prompt(8)>\";\nsetTimeout(userInput, 1000);",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-27.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image/src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-27.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image/src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 6,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image/src/onerror=prompt(8)>",
+      "context": "Database Storage",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-28.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image/src/onerror=prompt(8)>\";\ndb.collection('users').insert({ comment: userInput });",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-28.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image/src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-28.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image/src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 6,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image/src/onerror=prompt(8)>",
+      "context": "Template Literal Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-29.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image/src/onerror=prompt(8)>\";\nconst message = `Hello ${userInput}`;\nelement.innerHTML = message;",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-29.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image/src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-29.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image/src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-29.js",
+            "line": 3,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "element.innerHTML = message",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 6,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<img/src/onerror=prompt(8)>",
+      "context": "JavaScript String Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-30.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img/src/onerror=prompt(8)>\";\neval(userInput);",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-30.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img/src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-30.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<img/src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 7,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<img/src/onerror=prompt(8)>",
+      "context": "DOM innerHTML Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-31.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img/src/onerror=prompt(8)>\";\ndocument.getElementById('test').innerHTML = userInput;",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-31.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img/src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-31.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<img/src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-31.js",
+            "line": 2,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "document.getElementById('test').innerHTML = userInput",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 7,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<img/src/onerror=prompt(8)>",
+      "context": "setTimeout Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-32.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img/src/onerror=prompt(8)>\";\nsetTimeout(userInput, 1000);",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-32.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img/src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-32.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<img/src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 7,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<img/src/onerror=prompt(8)>",
+      "context": "Database Storage",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-33.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img/src/onerror=prompt(8)>\";\ndb.collection('users').insert({ comment: userInput });",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-33.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img/src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-33.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<img/src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 7,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<img/src/onerror=prompt(8)>",
+      "context": "Template Literal Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-34.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img/src/onerror=prompt(8)>\";\nconst message = `Hello ${userInput}`;\nelement.innerHTML = message;",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-34.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img/src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-34.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<img/src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-34.js",
+            "line": 3,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "element.innerHTML = message",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 7,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image src/onerror=prompt(8)>",
+      "context": "JavaScript String Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-35.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src/onerror=prompt(8)>\";\neval(userInput);",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-35.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-35.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 8,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image src/onerror=prompt(8)>",
+      "context": "DOM innerHTML Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-36.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src/onerror=prompt(8)>\";\ndocument.getElementById('test').innerHTML = userInput;",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-36.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-36.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-36.js",
+            "line": 2,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "document.getElementById('test').innerHTML = userInput",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 8,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image src/onerror=prompt(8)>",
+      "context": "setTimeout Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-37.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src/onerror=prompt(8)>\";\nsetTimeout(userInput, 1000);",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-37.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-37.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 8,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image src/onerror=prompt(8)>",
+      "context": "Database Storage",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-38.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src/onerror=prompt(8)>\";\ndb.collection('users').insert({ comment: userInput });",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-38.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-38.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 8,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image src/onerror=prompt(8)>",
+      "context": "Template Literal Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-39.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src/onerror=prompt(8)>\";\nconst message = `Hello ${userInput}`;\nelement.innerHTML = message;",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-39.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-39.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-39.js",
+            "line": 3,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "element.innerHTML = message",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 8,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<img src/onerror=prompt(8)>",
+      "context": "JavaScript String Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-40.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img src/onerror=prompt(8)>\";\neval(userInput);",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-40.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-40.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<img src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 9,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<img src/onerror=prompt(8)>",
+      "context": "DOM innerHTML Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-41.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img src/onerror=prompt(8)>\";\ndocument.getElementById('test').innerHTML = userInput;",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-41.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-41.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<img src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-41.js",
+            "line": 2,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "document.getElementById('test').innerHTML = userInput",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 9,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<img src/onerror=prompt(8)>",
+      "context": "setTimeout Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-42.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img src/onerror=prompt(8)>\";\nsetTimeout(userInput, 1000);",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-42.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-42.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<img src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 9,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<img src/onerror=prompt(8)>",
+      "context": "Database Storage",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-43.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img src/onerror=prompt(8)>\";\ndb.collection('users').insert({ comment: userInput });",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-43.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-43.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<img src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 9,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<img src/onerror=prompt(8)>",
+      "context": "Template Literal Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-44.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img src/onerror=prompt(8)>\";\nconst message = `Hello ${userInput}`;\nelement.innerHTML = message;",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-44.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<img src/onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-44.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<img src/onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-44.js",
+            "line": 3,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "element.innerHTML = message",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 9,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image src =q onerror=prompt(8)>",
+      "context": "JavaScript String Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-45.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src =q onerror=prompt(8)>\";\neval(userInput);",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-45.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src =q onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-45.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image src =q onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 10,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image src =q onerror=prompt(8)>",
+      "context": "DOM innerHTML Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-46.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src =q onerror=prompt(8)>\";\ndocument.getElementById('test').innerHTML = userInput;",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-46.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src =q onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-46.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image src =q onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-46.js",
+            "line": 2,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "document.getElementById('test').innerHTML = userInput",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 10,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image src =q onerror=prompt(8)>",
+      "context": "setTimeout Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-47.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src =q onerror=prompt(8)>\";\nsetTimeout(userInput, 1000);",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-47.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src =q onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-47.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image src =q onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 10,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image src =q onerror=prompt(8)>",
+      "context": "Database Storage",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-48.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src =q onerror=prompt(8)>\";\ndb.collection('users').insert({ comment: userInput });",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-48.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src =q onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-48.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image src =q onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 10,
+      "hasLLMEnhancement": true
+    },
+    {
+      "payload": "<image src =q onerror=prompt(8)>",
+      "context": "Template Literal Injection",
+      "detected": true,
+      "vulnerabilities": [
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-49.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src =q onerror=prompt(8)>\";\nconst message = `Hello ${userInput}`;\nelement.innerHTML = message;",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-49.js",
+            "line": 1,
+            "column": 0
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "const userInput = \"<image src =q onerror=prompt(8)>\";",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "event-handler",
+          "severity": "high",
+          "location": {
+            "file": "test-49.js",
+            "line": 1,
+            "column": 6
+          },
+          "description": "Unsafe inline event handler attributes with user input (OWASP Rule #3)",
+          "code": "userInput = \"<image src =q onerror=prompt(8)>\"",
+          "remediation": "Avoid inline event handlers. Use addEventListener() instead.",
+          "confidence": 0.8
+        },
+        {
+          "type": "dom",
+          "severity": "high",
+          "location": {
+            "file": "test-49.js",
+            "line": 3,
+            "column": 0
+          },
+          "description": "Unsafe DOM manipulation with user input using innerHTML or outerHTML (OWASP Rule #2)",
+          "code": "element.innerHTML = message",
+          "remediation": "Use .textContent to insert plain text, which is not parsed as HTML.",
+          "confidence": 0.8
+        }
+      ],
+      "lineNumber": 10,
+      "hasLLMEnhancement": true
+    }
+  ]
+}

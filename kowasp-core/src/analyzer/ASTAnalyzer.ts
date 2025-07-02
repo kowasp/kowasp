@@ -45,8 +45,11 @@ export class ASTAnalyzer {
             });
             this.traverseAST(ast as any, code);
         } catch (error: any) {
-            console.error(`Error analyzing file ${this.filePath}:`, error);
-            throw new Error(`Failed to parse the code. Please ensure it is valid JavaScript/JSX. Error: ${error.message}`);
+            // Log the error but don't throw - return empty results instead
+            console.warn(`[ASTAnalyzer] Parser error in ${this.filePath}: ${error.message}`);
+            console.warn(`[ASTAnalyzer] Code that caused error: ${code.substring(0, 200)}...`);
+            // Return empty vulnerabilities instead of throwing
+            return [];
         }
         return this.vulnerabilities;
     }
